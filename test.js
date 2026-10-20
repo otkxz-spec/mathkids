@@ -98,9 +98,88 @@ for (const m of html.matchAll(/data-ta?="(\w+)"/g)) assert(L.TR.en[m[1]], 'missi
 const src = fs.readFileSync(__dirname + '/app.js', 'utf8');
 for (const m of src.matchAll(/\bt\('(\w+)'\)/g)) assert(L.TR.en[m[1]], 'missing t() key ' + m[1]);
 
+/* ---------- 3.1.1 retry & explanations ---------- */
+const q7 = { op: 'mul', a: 6, b: 7, answer: 42, table: 7, text: '6 × 7' };
+const rec = (q) => ({ q, given: [], outcome: null, ok: false });
+// practice: wrong then right = retry
+let r = rec(q7); L.attempt(r, 40, true); assert.strictEqual(r.outcome, null, 'retry pending'); L.attempt(r, 42, true);
+assert.strictEqual(r.outcome, 'retry'); assert(r.ok);
+// practice: right first time
+r = rec(q7); L.attempt(r, 42, true); assert.strictEqual(r.outcome, 'first');
+// practice: two wrong = unresolved, further attempts ignored (no farming)
+r = rec(q7); L.attempt(r, 1, true); L.attempt(r, 2, true); assert.strictEqual(r.outcome, 'unresolved');
+L.attempt(r, 42, true); assert.strictEqual(r.outcome, 'unresolved'); assert.strictEqual(r.given.length, 2); assert(!r.ok);
+// quiz: one wrong = unresolved immediately
+r = rec(q7); L.attempt(r, 1, false); assert.strictEqual(r.outcome, 'unresolved');
+// resolved-correct can't be re-scored either
+r = rec(q7); L.attempt(r, 42, true); L.attempt(r, 1, true); assert.strictEqual(r.outcome, 'first'); assert.strictEqual(r.given.length, 1);
+
+// scoring: first=1, retry=0.5
+const sc = L.scoreRound([{ outcome: 'first' }, { outcome: 'retry' }, { outcome: 'unresolved' }, { outcome: 'first' }]);
+assert.deepStrictEqual([sc.first, sc.retry, sc.unresolved, sc.total, sc.points, sc.pct], [2, 1, 1, 4, 2.5, 63]);
+assert.strictEqual(L.scoreRound([{ ok: true }, { ok: false }]).first, 1, 'legacy results count ok as first try');
+
+// recordRound tracks outcomes
+const st2 = L.emptyStats();
+L.recordRound(st2, [{ q: q7, ok: true, outcome: 'first' }, { q: q7, ok: true, outcome: 'retry' }, { q: q7, ok: false, outcome: 'unresolved' }], { ts: at(2026, 10, 20), mode: 'type', feedbackMode: 'practice', digits: 1 });
+assert.deepStrictEqual([st2.correct, st2.firstTry, st2.retry], [2, 1, 1]);
+assert.deepStrictEqual([st2.history[0].firstTry, st2.history[0].retry, st2.history[0].correct], [1, 1, 2]);
+const legacyStats = { ...L.emptyStats() }; delete legacyStats.firstTry; delete legacyStats.retry;
+L.recordRound(legacyStats, [{ q: q7, ok: true }], { ts: at(2026, 10, 20), mode: 'type', digits: 1 });
+assert.strictEqual(legacyStats.firstTry, 1, 'old stats objects gain counters');
+
+// migration default
+assert.strictEqual(L.normalizeProfile({ id: 'z', name: 'A', config: {} }, 'en').config.feedbackMode, 'practice');
+assert.strictEqual(L.normalizeProfile({ id: 'z', name: 'A', config: { feedbackMode: 'quiz' } }, 'en').config.feedbackMode, 'quiz');
+assert.strictEqual(L.normalizeProfile({ id: 'z', name: 'A', config: { feedbackMode: 'bogus' } }, 'en').config.feedbackMode, 'practice');
+
+// explanations: every "a = b = c" chain in the line/steps must be arithmetically true and end in the answer
+const evalExpr = s => Function('"use strict";return (' + s.replace(/×/g, '*').replace(/−/g, '-').replace(/÷/g, '/') + ')')();
+function checkChains(text, ctx) {
+  for (const seg of text.split(',')) {
+    if (!seg.includes('=') || seg.includes('→')) continue;
+    const vals = seg.split('=').map(p => evalExpr(p.trim()));
+    assert(vals.every(v => v === vals[0]), 'bad maths in "' + seg + '" for ' + ctx);
+  }
+}
+let explained = 0;
+for (const digits of [1, 2, 3]) {
+  const cfg = { ...L.defaultCfg(), ops: ['add', 'sub', 'mul', 'div'], digits, tables: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], count: 100 };
+  for (let i = 0; i < 20; i++) for (const q of L.makeRound(cfg)) {
+    explained++;
+    const x = L.explain(q);
+    assert(L.TR.en[x.key] && L.TR.es[x.key], 'explain key translated ' + x.key);
+    assert(x.line.length > 0 && x.line.length <= 80, 'short line: ' + x.line);
+    assert(x.line.split(/[ ,=→+×−]+/).includes(String(q.answer)), 'line shows answer: ' + q.text + ' → ' + x.line);
+    checkChains(x.line, q.text);
+    for (const s of x.steps) { assert(L.TR.en[s.k], 'step key ' + s.k); checkChains(s.v, q.text); }
+    assert.strictEqual(x.steps[x.steps.length - 1].v, `${q.text} = ${q.answer}`);
+    if (q.op === 'add' && q.digits > 1) { // column digits must rebuild the answer
+      const cols = x.steps.filter(s => /^p/.test(s.k));
+      const rebuilt = Number(cols.map(s => s.v.includes('=') ? String(Number(s.v.split('=')[1]) % 10) : s.v).reverse().join(''));
+      assert.strictEqual(rebuilt, q.answer, 'column add rebuilds ' + q.text);
+    }
+    if (q.op === 'sub' && q.digits > 1 && !(q.a < 20 && q.b < 10)) {
+      const cols = x.steps.filter(s => /^p/.test(s.k));
+      assert.strictEqual(Number(cols.map(s => s.v.split('=')[1].trim()).reverse().join('')), q.answer, 'column sub rebuilds ' + q.text);
+    }
+  }
+}
+// specific examples from the plan
+assert.strictEqual(L.explain({ op: 'add', a: 8, b: 5, answer: 13, text: '8 + 5' }).line, '8 + 2 = 10, 10 + 3 = 13');
+assert.strictEqual(L.explain({ op: 'mul', a: 6, b: 7, answer: 42, table: 6, text: '6 × 7' }).line, '6 × 5 + 6 × 2 = 30 + 12 = 42');
+assert.strictEqual(L.explain({ op: 'div', a: 42, b: 6, answer: 7, table: 6, text: '42 ÷ 6' }).line, '6 × 7 = 42');
+assert.strictEqual(L.explain({ op: 'sub', a: 52, b: 17, answer: 35, text: '52 − 17' }).line, '17 + 35 = 52');
+assert(L.explain({ op: 'add', a: 47, b: 38, answer: 85, text: '47 + 38' }).steps[0].carry, 'ones column carries');
+assert(L.explain({ op: 'sub', a: 52, b: 17, answer: 35, text: '52 − 17' }).steps[0].borrow, 'ones column borrows');
+assert.strictEqual(L.explain({ op: 'add', a: 999, b: 999, answer: 1998, text: '999 + 999' }).steps.filter(s => /^p/.test(s.k)).length, 4, 'thousands carry');
+
 /* ---------- PWA ---------- */
 const manifest = JSON.parse(fs.readFileSync(__dirname + '/manifest.json', 'utf8'));
 assert(manifest.icons.length >= 2, 'manifest has icons');
 for (const i of manifest.icons) assert(fs.existsSync(__dirname + '/' + i.src), 'icon exists ' + i.src);
+const sw = fs.readFileSync(__dirname + '/sw.js', 'utf8');
+assert(sw.includes(`'mathkids-v${L.APP_VERSION}'`), 'sw.js VERSION must match APP_VERSION ' + L.APP_VERSION);
+assert(fs.readFileSync(__dirname + '/CHANGELOG.md', 'utf8').includes(`## ${L.APP_VERSION}`), 'CHANGELOG has an entry for ' + L.APP_VERSION);
 
-console.log('OK –', n, 'typed +', mc, 'multiple-choice questions checked; all tests passed.');
+console.log('OK –', n, 'typed +', mc, 'multiple-choice questions checked,', explained, 'explanations verified; all tests passed.');

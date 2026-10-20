@@ -5,12 +5,15 @@
 (function (root) {
   'use strict';
 
+  /** Keep in sync with VERSION in sw.js (test.js enforces this). */
+  const APP_VERSION = '3.1.0';
+
   /* ------------------------------------------------------------------ */
   /* Translations                                                        */
   /* ------------------------------------------------------------------ */
   const TR = {
     en: {
-      appName: 'Math Kids', player: 'Player',
+      appName: 'Math Kids', player: 'Player', version: 'Version',
       practice: 'What do you want to practice?', add: 'Addition', sub: 'Subtraction', mul: 'Multiplication', div: 'Division',
       difficulty: 'Addition & subtraction difficulty', difficultyHint: 'Controls the number of digits in both numbers.',
       digit1: '1 digit', digit2: '2 digits', digit3: '3 digits',
@@ -28,10 +31,16 @@
       perfect: 'Perfect score! 🌟', awesome: 'Awesome job! 🎉', effort: 'Good effort! Keep practicing. 💪', tryAgain: 'Try again, you can do it! 🚀',
       confirmQuit: 'Quit this round? It will not be saved.', confirmDelete: 'Delete this profile and its progress?',
       confirmReset: 'Erase this profile’s progress?', nameError: 'Enter a name.',
-      aProfile: 'Switch profile', aProgress: 'Progress', aSettings: 'Settings', aQuit: 'Quit round', aBack: 'Back', aClose: 'Close'
+      aProfile: 'Switch profile', aProgress: 'Progress', aSettings: 'Settings', aQuit: 'Quit round', aBack: 'Back', aClose: 'Close',
+      practiceMode: 'Practice', quizMode: 'Quiz', feedbackModeHint: 'Practice: one more try after a mistake. Quiz: one try, then the explanation.',
+      retryPrompt: 'Not quite — try again!', gotItRetry: 'Got it on the second try! ✔', showMe: 'Show me',
+      firstTry: 'First try', onRetry: 'On retry', unresolved: 'Unresolved',
+      xMakeTen: 'Make 10:', xCountOn: 'Count on:', xColumns: 'Ones first, then tens:', xThinkAdd: 'Think addition:', xCountBack: 'Count back:',
+      xGroups: 'Equal groups:', xSplit: 'Split it:', xInverse: 'Use multiplication:', xSkipCount: 'Skip count:', xResult: 'Answer:',
+      pOnes: 'Ones:', pTens: 'Tens:', pHundreds: 'Hundreds:', pThousands: 'Thousands:', carryOne: '→ carry 1', borrowed: '(borrowed 10)'
     },
     es: {
-      appName: 'Mate Kids', player: 'Jugador',
+      appName: 'Mate Kids', player: 'Jugador', version: 'Versión',
       practice: '¿Qué quieres practicar?', add: 'Suma', sub: 'Resta', mul: 'Multiplicación', div: 'División',
       difficulty: 'Dificultad de suma y resta', difficultyHint: 'Controla la cantidad de dígitos en ambos números.',
       digit1: '1 dígito', digit2: '2 dígitos', digit3: '3 dígitos',
@@ -49,7 +58,13 @@
       perfect: '¡Puntuación perfecta! 🌟', awesome: '¡Excelente trabajo! 🎉', effort: '¡Buen esfuerzo! Sigue practicando. 💪', tryAgain: '¡Inténtalo de nuevo, tú puedes! 🚀',
       confirmQuit: '¿Salir? Esta ronda no se guardará.', confirmDelete: '¿Eliminar este perfil y su progreso?',
       confirmReset: '¿Borrar el progreso de este perfil?', nameError: 'Escribe un nombre.',
-      aProfile: 'Cambiar perfil', aProgress: 'Progreso', aSettings: 'Ajustes', aQuit: 'Salir de la ronda', aBack: 'Atrás', aClose: 'Cerrar'
+      aProfile: 'Cambiar perfil', aProgress: 'Progreso', aSettings: 'Ajustes', aQuit: 'Salir de la ronda', aBack: 'Atrás', aClose: 'Cerrar',
+      practiceMode: 'Práctica', quizMode: 'Examen', feedbackModeHint: 'Práctica: un intento más después de un error. Examen: un intento y luego la explicación.',
+      retryPrompt: 'Casi — ¡inténtalo otra vez!', gotItRetry: '¡Lo lograste en el segundo intento! ✔', showMe: 'Muéstrame',
+      firstTry: 'Al primer intento', onRetry: 'Al reintentar', unresolved: 'Sin resolver',
+      xMakeTen: 'Forma 10:', xCountOn: 'Cuenta hacia adelante:', xColumns: 'Primero unidades, luego decenas:', xThinkAdd: 'Piensa en una suma:', xCountBack: 'Cuenta hacia atrás:',
+      xGroups: 'Grupos iguales:', xSplit: 'Divídelo:', xInverse: 'Usa la multiplicación:', xSkipCount: 'Cuenta saltando:', xResult: 'Respuesta:',
+      pOnes: 'Unidades:', pTens: 'Decenas:', pHundreds: 'Centenas:', pThousands: 'Millares:', carryOne: '→ llevas 1', borrowed: '(pediste 10)'
     }
   };
 
@@ -61,8 +76,8 @@
   const HISTORY_MAX = 50;
   const COUNT_PRESETS = [5, 10, 15, 20, 30];
 
-  const emptyStats = () => ({ rounds: 0, questions: 0, correct: 0, ops: {}, digits: {}, tables: {}, days: [], history: [] });
-  const defaultCfg = () => ({ ops: ['add'], digits: 1, tables: [2, 3, 4, 5], count: 10, mode: 'type' });
+  const emptyStats = () => ({ rounds: 0, questions: 0, correct: 0, firstTry: 0, retry: 0, ops: {}, digits: {}, tables: {}, days: [], history: [] });
+  const defaultCfg = () => ({ ops: ['add'], digits: 1, tables: [2, 3, 4, 5], count: 10, mode: 'type', feedbackMode: 'practice' });
   const defaultName = (lang, n) => `${(TR[lang] || TR.en).player} ${n}`;
   const symbolOf = op => OPS.find(x => x[0] === op)[1];
 
@@ -139,19 +154,115 @@
 
   function bump(map, k, ok) { const e = map[k] || (map[k] = { n: 0, c: 0 }); e.n++; if (ok) e.c++; }
 
+  /* ----- Retry & explanation (3.1.1) ----- */
+
+  /**
+   * Registers one answer attempt on a result record {q, given:[], outcome, ok}.
+   * outcome: null (retry pending) | 'first' | 'retry' | 'unresolved'.
+   * Once resolved, further attempts are ignored (no point farming).
+   */
+  function attempt(rec, value, allowRetry) {
+    if (rec.outcome) return rec;
+    rec.given.push(value);
+    if (value === rec.q.answer) rec.outcome = rec.given.length === 1 ? 'first' : 'retry';
+    else if (!(allowRetry && rec.given.length < 2)) rec.outcome = 'unresolved';
+    rec.ok = rec.outcome === 'first' || rec.outcome === 'retry';
+    return rec;
+  }
+
+  /** Legacy results (pre-3.1) have no outcome: treat ok as first-try. */
+  const outcomeOf = r => r.outcome || (r.ok ? 'first' : 'unresolved');
+
+  /** First-try correct = 1 point, retry correct = 0.5. */
+  function scoreRound(results) {
+    const first = results.filter(r => outcomeOf(r) === 'first').length;
+    const retry = results.filter(r => outcomeOf(r) === 'retry').length;
+    const total = results.length, points = first + retry * 0.5;
+    return { first, retry, unresolved: total - first - retry, total, points, pct: percent(points, total) };
+  }
+
+  const PLACE_KEYS = ['pOnes', 'pTens', 'pHundreds', 'pThousands'];
+  const digitsOf = n => String(n).split('').reverse().map(Number);
+
+  function columnAdd(a, b) {
+    const A = digitsOf(a), B = digitsOf(b), steps = [];
+    let carry = 0;
+    for (let i = 0; i < Math.max(A.length, B.length); i++) {
+      const x = A[i] || 0, y = B[i] || 0, s = x + y + carry;
+      steps.push({ k: PLACE_KEYS[i], v: `${x} + ${y}${carry ? ' + ' + carry : ''} = ${s}`, carry: s >= 10 });
+      carry = s >= 10 ? 1 : 0;
+    }
+    if (carry) steps.push({ k: PLACE_KEYS[A.length > B.length ? A.length : B.length], v: '1' });
+    return steps;
+  }
+
+  function columnSub(a, b) {
+    const A = digitsOf(a), B = digitsOf(b), steps = [];
+    let borrow = 0;
+    for (let i = 0; i < A.length; i++) {
+      let x = A[i] - borrow; const y = B[i] || 0, borrowed = x < y;
+      if (borrowed) x += 10;
+      borrow = borrowed ? 1 : 0;
+      if (i >= B.length && i === A.length - 1 && x === 0) break; // no leading zero column
+      steps.push({ k: PLACE_KEYS[i], v: `${x} − ${y} = ${x - y}`, borrow: borrowed });
+    }
+    return steps;
+  }
+
+  const seq = (from, to, step = 1) => { const out = []; for (let n = from; step > 0 ? n <= to : n >= to; n += step) out.push(n); return out; };
+
+  /**
+   * Short, language-neutral explanation for a question.
+   * Returns { key, line, steps:[{k, v, carry?, borrow?}] }; key/k are TR keys.
+   */
+  function explain(q) {
+    const { op, a, b, answer: ans } = q, result = { k: 'xResult', v: `${q.text} = ${ans}` };
+    if (op === 'add') {
+      if (a < 10 && b < 10) {
+        const big = Math.max(a, b), small = Math.min(a, b);
+        if (ans > 10) {
+          const need = 10 - big;
+          return { key: 'xMakeTen', line: `${big} + ${need} = 10, 10 + ${small - need} = ${ans}`, steps: [result] };
+        }
+        return { key: 'xCountOn', line: `${big} → ${seq(big + 1, ans).join(', ')}`, steps: [result] };
+      }
+      const steps = columnAdd(a, b);
+      return { key: 'xColumns', line: `${steps.filter(s => s.v.includes('=')).map(s => s.v).join(', ')} → ${ans}`, steps: [...steps, result] };
+    }
+    if (op === 'sub') {
+      const line = `${b} + ${ans} = ${a}`;
+      if (a < 20 && b < 10) return { key: 'xThinkAdd', line, steps: [{ k: 'xCountBack', v: `${a} → ${seq(a - 1, ans, -1).join(', ')}` }, result] };
+      return { key: 'xThinkAdd', line, steps: [...columnSub(a, b), result] };
+    }
+    if (op === 'mul') {
+      const t = q.table || b, o = a === t ? b : a;
+      if (o <= 5) {
+        const line = o === 1 ? `1 × ${t} = ${ans}` : `${Array(o).fill(t).join(' + ')} = ${ans}`;
+        return { key: 'xGroups', line, steps: [result] };
+      }
+      const line = `${t} × 5 + ${t} × ${o - 5} = ${t * 5} + ${t * (o - 5)} = ${ans}`;
+      return { key: 'xSplit', line, steps: [{ k: 'xGroups', v: `${o} × ${t}` }, result] };
+    }
+    // division
+    return { key: 'xInverse', line: `${b} × ${ans} = ${a}`, steps: [{ k: 'xSkipCount', v: seq(b, a, b).join(', ') }, result] };
+  }
+
   /** Adds a finished round to a stats object (mutates and returns it). */
   function recordRound(s, results, meta) {
     s.rounds++;
+    s.firstTry = s.firstTry || 0; s.retry = s.retry || 0;
     results.forEach(r => {
       s.questions++;
       if (r.ok) s.correct++;
+      const o = outcomeOf(r);
+      if (o === 'first') s.firstTry++; else if (o === 'retry') s.retry++;
       bump(s.ops, r.q.op, r.ok);
       if (r.q.digits) bump(s.digits, `${r.q.op}-${r.q.digits}`, r.ok);
       if (r.q.table) bump(s.tables, r.q.table, r.ok);
     });
-    const day = dayKey(meta.ts);
+    const day = dayKey(meta.ts), sc = scoreRound(results);
     if (!s.days.includes(day)) s.days.push(day);
-    s.history.push({ ts: meta.ts, correct: results.filter(r => r.ok).length, total: results.length, mode: meta.mode, digits: meta.digits });
+    s.history.push({ ts: meta.ts, correct: sc.first + sc.retry, firstTry: sc.first, retry: sc.retry, total: results.length, mode: meta.mode, feedbackMode: meta.feedbackMode, digits: meta.digits });
     s.history = s.history.slice(-HISTORY_MAX);
     return s;
   }
@@ -166,13 +277,14 @@
   function normalizeProfile(p, lang) {
     const config = { ...defaultCfg(), ...(p.config || {}) };
     if (!Number.isInteger(config.count) || config.count < 1 || config.count > 100) config.count = 10;
+    if (config.feedbackMode !== 'practice' && config.feedbackMode !== 'quiz') config.feedbackMode = 'practice';
     let name = p.name;
     if (!name || name === 'Player profile') name = defaultName(lang, 1); // fix v3 naming bug
     return { ...p, name, config, stats: { ...emptyStats(), ...(p.stats || {}) } };
   }
 
-  const core = { TR, OPS, HISTORY_MAX, emptyStats, defaultCfg, defaultName, bounds, oneQuestion, choices, makeRound,
-    validateConfig, dayKey, streak, recordRound, percent, level, normalizeProfile };
+  const core = { APP_VERSION, TR, OPS, HISTORY_MAX, emptyStats, defaultCfg, defaultName, bounds, oneQuestion, choices, makeRound,
+    validateConfig, dayKey, streak, recordRound, percent, level, normalizeProfile, attempt, scoreRound, explain };
   if (typeof module !== 'undefined' && module.exports) module.exports = core;
   root.MathKidsTest = core;
   if (typeof document === 'undefined') return;
@@ -209,6 +321,7 @@
     $$('[data-ta]').forEach(x => x.setAttribute('aria-label', t(x.dataset.ta)));
     document.documentElement.lang = settings.lang;
     document.title = t('appName');
+    $('#appVersion').textContent = `${t('version')} ${APP_VERSION}`;
     renderHome(); renderProfileHeaders(); applySettingsUI();
   }
 
@@ -269,6 +382,11 @@
     [['type', '⌨️'], ['choice', '🔘']].forEach(([m, i]) => $('#modes').append(chip(`<span class="symbol">${i}</span>${esc(t(m))}`, c.mode === m, () => {
       c.mode = m; saveAll(); renderHome();
     }, true)));
+
+    $('#feedbackModes').innerHTML = '';
+    [['practice', '🌱', 'practiceMode'], ['quiz', '📝', 'quizMode']].forEach(([m, i, k]) => $('#feedbackModes').append(chip(`<span class="symbol">${i}</span>${esc(t(k))}`, c.feedbackMode === m, () => {
+      c.feedbackMode = m; saveAll(); renderHome();
+    }, true)));
   }
 
   function start() {
@@ -278,14 +396,30 @@
     $('#error').textContent = err ? t(err) : '';
     if (err) return; // invalid custom value is never written to the profile
     c.count = count; saveAll();
-    round = { questions: makeRound(c), i: 0, results: [], start: Date.now(), answered: false, input: '' };
+    round = { questions: makeRound(c), i: 0, results: [], current: null, start: Date.now(), answered: false, input: '' };
     show('quiz'); renderQuestion();
+  }
+
+  /* Explanation rendering (text comes from explain(); all inserted strings are escaped). */
+  function explainHTML(q) { const x = explain(q); return `<b>${esc(t(x.key))}</b> ${esc(x.line)}`; }
+  function stepsHTML(q) {
+    const x = explain(q);
+    return x.steps.map(s => `<div class="step"><b>${esc(t(s.k))}</b> ${esc(s.v)}${s.carry ? ' ' + esc(t('carryOne')) : ''}${s.borrow ? ' ' + esc(t('borrowed')) : ''}</div>`).join('') + dotsHTML(q);
+  }
+  function dotsHTML(q) {
+    const row = n => `<span class="dotrow">${'●'.repeat(n)}</span>`;
+    if (q.op === 'add' && q.a < 10 && q.b < 10) return `<div class="dots">${row(q.a)} + ${row(q.b)}</div>`;
+    if (q.op === 'sub' && q.a < 20 && q.b < 10) return `<div class="dots"><span class="dotrow">${'●'.repeat(q.answer)}<s>${'●'.repeat(q.b)}</s></span></div>`;
+    if (q.op === 'mul' && q.answer <= 72) { const t0 = q.table || q.b, o = q.a === t0 ? q.b : q.a; return `<div class="dots">${Array(o).fill(row(t0)).join('<br>')}</div>`; }
+    if (q.op === 'div' && q.a <= 72) return `<div class="dots">${Array(q.b).fill(row(q.answer)).join('<br>')}</div>`;
+    return '';
   }
 
   function renderQuestion() {
     const q = round.questions[round.i], mc = P().config.mode === 'choice';
-    round.answered = false; round.input = '';
+    round.answered = false; round.input = ''; round.current = null;
     $('#qText').textContent = q.text; $('#qAnswer').textContent = '?'; $('#feedback').textContent = '';
+    $('#explain').classList.add('hidden'); $('#showMe').classList.add('hidden'); $('#showMe').innerHTML = '';
     $('#nextBtn').classList.add('hidden');
     $('#choices').innerHTML = ''; $('#keypad').innerHTML = '';
     $('#choices').classList.toggle('hidden', !mc); $('#keypad').classList.toggle('hidden', mc);
@@ -313,13 +447,25 @@
 
   function submit(v, btn) {
     if (round.answered) return;
-    const q = round.questions[round.i], ok = v === q.answer;
-    round.results.push({ q, given: v, ok }); round.answered = true;
+    const q = round.questions[round.i], c = P().config, mc = c.mode === 'choice';
+    const rec = round.current || (round.current = { q, given: [], outcome: null, ok: false });
+    attempt(rec, v, settings.feedback && c.feedbackMode === 'practice');
+
+    if (!rec.outcome) { // Practice mode: one more try
+      beep(false);
+      $('#feedback').textContent = t('retryPrompt');
+      round.input = ''; $('#qAnswer').textContent = '?';
+      if (btn) { btn.disabled = true; btn.classList.add('tried'); }
+      return;
+    }
+
+    round.results.push(rec); round.current = null; round.answered = true;
     $('#qAnswer').textContent = v;
-    beep(ok);
+    beep(rec.ok);
     if (settings.feedback) {
-      $('#feedback').textContent = ok ? t('great') : `${t('oops')} ${q.answer}`;
-      if (P().config.mode === 'choice') $$('#choices .choice').forEach(b => {
+      $('#feedback').textContent = rec.outcome === 'first' ? t('great') : rec.outcome === 'retry' ? t('gotItRetry') : `${t('oops')} ${q.answer}`;
+      if (rec.outcome === 'unresolved') { $('#explainLine').innerHTML = explainHTML(q); $('#explain').classList.remove('hidden'); }
+      if (mc) $$('#choices .choice').forEach(b => {
         b.disabled = true;
         if (Number(b.textContent) === q.answer) b.classList.add('right'); else if (b === btn) b.classList.add('wrong');
       });
@@ -340,21 +486,25 @@
   function finish() {
     round.end = Date.now();
     const c = P().config;
-    recordRound(P().stats, round.results, { ts: round.end, mode: c.mode, digits: c.digits });
+    recordRound(P().stats, round.results, { ts: round.end, mode: c.mode, feedbackMode: c.feedbackMode, digits: c.digits });
     saveAll(); show('summary'); $('#answers').classList.add('hidden'); renderSummary();
   }
 
   function renderSummary() {
-    const right = round.results.filter(r => r.ok).length, total = round.results.length, p = percent(right, total);
+    const sc = scoreRound(round.results), p = sc.pct;
     const stars = p >= 90 ? 3 : p >= 60 ? 2 : p >= 30 ? 1 : 0;
     $('#stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
-    $('#scoreBig').textContent = `${right} / ${total}`;
+    $('#scoreBig').textContent = `${sc.first + sc.retry} / ${sc.total}`;
     $('#scoreMsg').textContent = t(p === 100 ? 'perfect' : p >= 80 ? 'awesome' : p >= 50 ? 'effort' : 'tryAgain');
-    $('#sCorrect').textContent = right; $('#sWrong').textContent = total - right;
+    $('#sFirst').textContent = sc.first; $('#sRetry').textContent = sc.retry; $('#sUnresolved').textContent = sc.unresolved;
     const sec = Math.round((round.end - round.start) / 1000);
     $('#sTime').textContent = `${Math.floor(sec / 60)}:${pad(sec % 60)}`;
     $('#savedTo').textContent = `${t('saved')} ${P().avatar} ${P().name}`;
-    $('#answers').innerHTML = round.results.map(r => `<div class="answerRow"><b>${r.ok ? '✔' : '✘'}</b><span class="grow">${esc(r.q.text)} = ${r.q.answer}</span>${r.ok ? '' : `<small><s>${r.given}</s></small>`}</div>`).join('');
+    const icon = { first: '✔', retry: '🔁', unresolved: '✘' };
+    $('#answers').innerHTML = round.results.map(r => {
+      const wrong = r.given.filter(g => g !== r.q.answer);
+      return `<div class="answerRow"><b>${icon[r.outcome]}</b><span class="grow">${esc(r.q.text)} = ${r.q.answer}${r.outcome !== 'first' ? `<small class="explainSmall">${explainHTML(r.q)}</small>` : ''}</span>${wrong.length ? `<small><s>${wrong.map(esc).join(' ')}</s></small>` : ''}</div>`;
+    }).join('');
     $('#answersBtn').textContent = t('showAnswers');
   }
 
@@ -436,6 +586,11 @@
   $('#customCount').oninput = () => { $('#error').textContent = ''; };
   $('#startBtn').onclick = start;
   $('#nextBtn').onclick = advance;
+  $('#showMeBtn').onclick = () => {
+    const box = $('#showMe');
+    if (box.classList.contains('hidden') && round) box.innerHTML = stepsHTML(round.questions[round.i]);
+    box.classList.toggle('hidden');
+  };
   $('#quitBtn').onclick = () => { if (confirm(t('confirmQuit'))) { round = null; show('home'); } };
   $('#answersBtn').onclick = () => { const h = $('#answers').classList.toggle('hidden'); $('#answersBtn').textContent = t(h ? 'showAnswers' : 'hideAnswers'); };
   $('#againBtn').onclick = start;

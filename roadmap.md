@@ -9,8 +9,9 @@
 | Item | Status |
 |---|---|
 | 3.0.1 Maintenance (bug fixes, tests, readable source) | ✅ Done |
-| 3.1.1 Retry and explanation flow | ⬜ Next |
-| 3.1.2 Error-aware answer choices | ⬜ |
+| 3.0.2 Visible app version in Settings | ✅ Done |
+| 3.1.1 Retry and explanation flow | ✅ Done (v3.1.0) |
+| 3.1.2 Error-aware answer choices | ⬜ Next |
 | 3.1.3 Skills model | ⬜ |
 | 3.2 Adaptive practice | ⬜ |
 | 3.6 Accessibility baseline | 🟡 Started (keyboard input, focus rings, ARIA labels) |

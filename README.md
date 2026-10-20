@@ -41,6 +41,7 @@ node test.js
 1. Upload all files in this folder to the repository root (replace the old ones).
 2. Repository Settings > Pages > Deploy from a branch > `main` / `(root)`.
 3. Open `https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/`.
-4. On every release, bump `VERSION` in `sw.js`.
+4. On every release, bump `APP_VERSION` in `app.js` **and** `VERSION` in `sw.js` (same number), and add a `CHANGELOG.md` entry. `node test.js` checks they match.
+5. To confirm what's live, open ⚙️ Settings — the version is shown at the bottom.
 
 Existing profiles and progress are migrated automatically.

@@ -25,7 +25,7 @@
     <div id="difficultyCard" class="card"><h2 data-t="difficulty">Addition &amp; subtraction difficulty</h2><div id="digits" class="grid3"></div><p class="hint" data-t="difficultyHint">Controls the number of digits in both numbers.</p></div>
     <div id="tablesCard" class="card"><div class="row"><h2 data-t="tables">Which tables?</h2><span><button id="allTables" class="link" data-t="all">All</button> <button id="noTables" class="link" data-t="none">None</button></span></div><div id="tables" class="grid6"></div></div>
     <div class="card"><h2 data-t="questions">How many questions?</h2><div id="counts" class="chips"></div><label><span data-t="custom">Custom</span> <input id="customCount" type="number" min="1" max="100" step="1" inputmode="numeric" placeholder="1–100"></label></div>
-    <div class="card"><h2 data-t="answerMode">How do you want to answer?</h2><div id="modes" class="grid2"></div></div>
+    <div class="card"><h2 data-t="answerMode">How do you want to answer?</h2><div id="modes" class="grid2"></div><div id="feedbackModes" class="grid2 modeRow"></div><p class="hint" data-t="feedbackModeHint">Practice: one more try after a mistake. Quiz: one try, then the explanation.</p></div>
     <p id="error" class="error" role="alert"></p>
   </main>
   <footer><button id="startBtn" class="primary" data-t="start">Start</button></footer>
@@ -40,6 +40,11 @@
   <main class="quiz">
     <div class="question" aria-live="polite"><span id="qText"></span> = <span id="qAnswer">?</span></div>
     <div id="feedback" aria-live="assertive"></div>
+    <div id="explain" class="explain hidden" aria-live="polite">
+      <p id="explainLine"></p>
+      <button id="showMeBtn" class="link" data-t="showMe">Show me</button>
+      <div id="showMe" class="showMe hidden"></div>
+    </div>
     <div id="choices" class="choicegrid"></div>
     <div id="keypad" class="keypad"></div>
     <button id="nextBtn" class="primary hidden" data-t="next">Next</button>
@@ -51,9 +56,10 @@
   <main>
     <div class="card center">
       <div id="stars"></div><div id="scoreBig"></div><p id="scoreMsg"></p>
-      <div class="stats">
-        <span><b id="sCorrect"></b><small data-t="correct">Correct</small></span>
-        <span><b id="sWrong"></b><small data-t="incorrect">Incorrect</small></span>
+      <div class="stats stats4">
+        <span><b id="sFirst"></b><small data-t="firstTry">First try</small></span>
+        <span><b id="sRetry"></b><small data-t="onRetry">On retry</small></span>
+        <span><b id="sUnresolved"></b><small data-t="unresolved">Unresolved</small></span>
         <span><b id="sTime"></b><small data-t="time">Time</small></span>
       </div>
       <p id="savedTo" class="hint"></p>
@@ -109,6 +115,7 @@
   <label><input id="soundToggle" type="checkbox"> <span data-t="sound">Sound effects</span></label>
   <label data-t="theme">Theme</label>
   <div class="seg"><button data-theme="auto" data-t="auto">Auto</button><button data-theme="light" data-t="light">Light</button><button data-theme="dark" data-t="dark">Dark</button></div>
+  <p id="appVersion" class="hint center"></p>
 </aside>
 
 </div>

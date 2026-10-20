@@ -1,5 +1,22 @@
 # Changelog
 
+## 3.1.0 — Retry and explanation flow (roadmap 3.1.1)
+### Added
+- **Practice / Quiz mode** per profile (Home → "How do you want to answer?"). Default: Practice.
+  - Practice: one retry after a wrong answer (wrong multiple-choice option is greyed out), then the answer + explanation.
+  - Quiz: one answer only, then the answer + explanation.
+- Short operation-specific explanation after an unresolved answer (make-10 / count-on, column add with carry, think-addition / column subtract with borrow, equal groups / split-the-fact, inverse multiplication), in English and Spanish.
+- **Show me** button with a worked example: place-value steps and dot pictures / arrays for small numbers.
+- Summary shows **First try / On retry / Unresolved**; stars and % give half credit for a correct retry. Answer list shows explanations for missed questions (also when instant feedback is off).
+- Progress stats record `firstTry` and `retry` counts; history entries record outcomes.
+### Migration
+- Existing profiles get `feedbackMode: 'practice'`; old stats and results are kept unchanged.
+
+## 3.0.2 — Visible version
+### Added
+- App version shown at the bottom of the Settings panel (e.g. "Version 3.0.2"), so you can confirm which release is live.
+- Single `APP_VERSION` constant in `app.js`; tests ensure it matches `sw.js` and has a changelog entry.
+
 ## 3.0.1 — Maintenance
 
 ### Fixed
