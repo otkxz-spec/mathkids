@@ -1,16 +1,117 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#4f46e5"><title>Math Kids</title><link rel="manifest" href="manifest.json"><link rel="stylesheet" href="style.css"></head><body>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Math Kids – free, offline, ad-free math practice for children: addition, subtraction, multiplication tables and division in English and Spanish.">
+<meta name="theme-color" content="#4f46e5">
+<title>Math Kids</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
 <div id="app">
-<section id="home" class="screen active"><header><button id="profileBtn" class="profile">🦊 <span>Player 1</span> ▾</button><div><button id="progressBtn">📊</button><button id="settingsBtn">⚙️</button></div></header><main>
-<div class="card"><h2 data-t="practice">What do you want to practice?</h2><div id="ops" class="grid2"></div></div>
-<div id="difficultyCard" class="card"><h2 data-t="difficulty">Addition & subtraction difficulty</h2><div id="digits" class="grid3"></div><p class="hint" data-t="difficultyHint">Controls the number of digits in both numbers.</p></div>
-<div id="tablesCard" class="card"><div class="row"><h2 data-t="tables">Which tables?</h2><span><button id="allTables" class="link" data-t="all">All</button> <button id="noTables" class="link" data-t="none">None</button></span></div><div id="tables" class="grid6"></div></div>
-<div class="card"><h2 data-t="questions">How many questions?</h2><div id="counts" class="chips"></div><label><span data-t="custom">Custom</span> <input id="customCount" type="number" min="1" max="100" inputmode="numeric" placeholder="1–100"></label></div>
-<div class="card"><h2 data-t="answerMode">How do you want to answer?</h2><div id="modes" class="grid2"></div></div><p id="error" class="error"></p></main><footer><button id="startBtn" class="primary" data-t="start">Start</button></footer></section>
-<section id="quiz" class="screen"><header><button id="quitBtn">✕</button><div class="grow"><div class="progress"><i id="progressBar"></i></div><small id="progressText"></small></div><b id="liveScore">⭐ 0</b></header><main class="quiz"><div class="question"><span id="qText"></span> = <span id="qAnswer">?</span></div><div id="feedback"></div><div id="choices" class="choicegrid"></div><div id="keypad" class="keypad"></div><button id="nextBtn" class="primary hidden" data-t="next">Next</button></main></section>
-<section id="summary" class="screen"><header><h1 data-t="results">Results</h1></header><main><div class="card center"><div id="stars"></div><div id="scoreBig"></div><p id="scoreMsg"></p><div class="stats"><span><b id="sCorrect"></b><small data-t="correct">Correct</small></span><span><b id="sWrong"></b><small data-t="incorrect">Incorrect</small></span><span><b id="sTime"></b><small data-t="time">Time</small></span></div><p id="savedTo" class="hint"></p></div><button id="answersBtn" class="secondary" data-t="showAnswers">Show answers</button><div id="answers" class="card hidden"></div><button id="summaryProgress" class="link">📊 <span data-t="progress">Progress</span></button></main><footer class="two"><button id="againBtn" class="primary" data-t="again">Play again</button><button id="homeBtn" class="secondary" data-t="home">Home</button></footer></section>
-<section id="progressScreen" class="screen"><header><button id="progressBack">←</button><h1 data-t="progress">Progress</h1><button id="progressProfile" class="profile">🦊 <span>Player 1</span> ▾</button></header><main><div id="emptyProgress" class="card center"><div class="big">📊</div><p data-t="noProgress">Play a round to start tracking progress.</p></div><div id="progressBody" class="hidden"><div id="tiles" class="tiles"></div><div class="card"><h2 data-t="byOperation">By operation</h2><div id="opStats"></div></div><div class="card"><h2 data-t="byDifficulty">Addition & subtraction by difficulty</h2><div id="difficultyStats"></div></div><div class="card"><h2 data-t="tableProgress">Tables (× and ÷)</h2><div id="tableStats" class="grid6"></div></div><div class="card"><h2 data-t="recent">Recent rounds</h2><div id="recent"></div></div></div><button id="resetProgress" class="danger hidden" data-t="resetProgress">Reset progress</button></main></section>
+
+<section id="home" class="screen active">
+  <header>
+    <button id="profileBtn" class="profile" data-ta="aProfile">🦊 <span>Player 1</span> ▾</button>
+    <h1 class="sr-only" data-t="appName">Math Kids</h1>
+    <div><button id="progressBtn" data-ta="aProgress">📊</button> <button id="settingsBtn" data-ta="aSettings">⚙️</button></div>
+  </header>
+  <main>
+    <div class="card"><h2 data-t="practice">What do you want to practice?</h2><div id="ops" class="grid2"></div></div>
+    <div id="difficultyCard" class="card"><h2 data-t="difficulty">Addition &amp; subtraction difficulty</h2><div id="digits" class="grid3"></div><p class="hint" data-t="difficultyHint">Controls the number of digits in both numbers.</p></div>
+    <div id="tablesCard" class="card"><div class="row"><h2 data-t="tables">Which tables?</h2><span><button id="allTables" class="link" data-t="all">All</button> <button id="noTables" class="link" data-t="none">None</button></span></div><div id="tables" class="grid6"></div></div>
+    <div class="card"><h2 data-t="questions">How many questions?</h2><div id="counts" class="chips"></div><label><span data-t="custom">Custom</span> <input id="customCount" type="number" min="1" max="100" step="1" inputmode="numeric" placeholder="1–100"></label></div>
+    <div class="card"><h2 data-t="answerMode">How do you want to answer?</h2><div id="modes" class="grid2"></div></div>
+    <p id="error" class="error" role="alert"></p>
+  </main>
+  <footer><button id="startBtn" class="primary" data-t="start">Start</button></footer>
+</section>
+
+<section id="quiz" class="screen">
+  <header>
+    <button id="quitBtn" data-ta="aQuit">✕</button>
+    <div class="grow"><div class="progress"><i id="progressBar"></i></div><small id="progressText"></small></div>
+    <b id="liveScore">⭐ 0</b>
+  </header>
+  <main class="quiz">
+    <div class="question" aria-live="polite"><span id="qText"></span> = <span id="qAnswer">?</span></div>
+    <div id="feedback" aria-live="assertive"></div>
+    <div id="choices" class="choicegrid"></div>
+    <div id="keypad" class="keypad"></div>
+    <button id="nextBtn" class="primary hidden" data-t="next">Next</button>
+  </main>
+</section>
+
+<section id="summary" class="screen">
+  <header><h1 data-t="results">Results</h1></header>
+  <main>
+    <div class="card center">
+      <div id="stars"></div><div id="scoreBig"></div><p id="scoreMsg"></p>
+      <div class="stats">
+        <span><b id="sCorrect"></b><small data-t="correct">Correct</small></span>
+        <span><b id="sWrong"></b><small data-t="incorrect">Incorrect</small></span>
+        <span><b id="sTime"></b><small data-t="time">Time</small></span>
+      </div>
+      <p id="savedTo" class="hint"></p>
+    </div>
+    <button id="answersBtn" class="secondary" data-t="showAnswers">Show answers</button>
+    <div id="answers" class="card hidden"></div>
+    <button id="summaryProgress" class="link">📊 <span data-t="progress">Progress</span></button>
+  </main>
+  <footer class="two"><button id="againBtn" class="primary" data-t="again">Play again</button><button id="homeBtn" class="secondary" data-t="home">Home</button></footer>
+</section>
+
+<section id="progressScreen" class="screen">
+  <header>
+    <button id="progressBack" data-ta="aBack">←</button>
+    <h1 data-t="progress">Progress</h1>
+    <button id="progressProfile" class="profile" data-ta="aProfile">🦊 <span>Player 1</span> ▾</button>
+  </header>
+  <main>
+    <div id="emptyProgress" class="card center"><div class="big">📊</div><p data-t="noProgress">Play a round to start tracking progress.</p></div>
+    <div id="progressBody" class="hidden">
+      <div id="tiles" class="tiles"></div>
+      <div class="card"><h2 data-t="byOperation">By operation</h2><div id="opStats"></div></div>
+      <div class="card"><h2 data-t="byDifficulty">Addition &amp; subtraction by difficulty</h2><div id="difficultyStats"></div></div>
+      <div class="card"><h2 data-t="tableProgress">Tables (× and ÷)</h2><div id="tableStats" class="grid6"></div></div>
+      <div class="card"><h2 data-t="recent">Recent rounds</h2><div id="recent"></div></div>
+    </div>
+    <button id="resetProgress" class="danger hidden" data-t="resetProgress">Reset progress</button>
+  </main>
+</section>
+
 <div id="backdrop" class="backdrop hidden"></div>
-<aside id="profilesSheet" class="sheet hidden"><div class="sheetHead"><h2 data-t="profiles">Profiles</h2><button class="close">✕</button></div><div id="profileList"></div><button id="addProfile" class="secondary" data-t="addProfile">+ Add profile</button></aside>
-<aside id="editorSheet" class="sheet hidden"><div class="sheetHead"><h2 id="editorTitle" data-t="newProfile">New profile</h2></div><label data-t="name">Name</label><input id="profileName" maxlength="16"><div id="avatars" class="grid6"></div><p id="profileError" class="error"></p><div class="two"><button id="saveProfile" class="primary" data-t="save">Save</button><button id="cancelProfile" class="secondary" data-t="cancel">Cancel</button></div><button id="deleteProfile" class="danger hidden" data-t="deleteProfile">Delete profile</button></aside>
-<aside id="settingsSheet" class="sheet hidden"><div class="sheetHead"><h2 data-t="settings">Settings</h2><button class="close">✕</button></div><label data-t="language">Language</label><div class="seg"><button data-lang="en">English</button><button data-lang="es">Español</button></div><label><input id="feedbackToggle" type="checkbox"> <span data-t="instantFeedback">Show feedback after each question</span></label><label><input id="soundToggle" type="checkbox"> <span data-t="sound">Sound effects</span></label><label data-t="theme">Theme</label><div class="seg"><button data-theme="auto" data-t="auto">Auto</button><button data-theme="light" data-t="light">Light</button><button data-theme="dark" data-t="dark">Dark</button></div></aside>
-</div><script src="app.js"></script></body></html>
+
+<aside id="profilesSheet" class="sheet hidden" role="dialog" aria-modal="true">
+  <div class="sheetHead"><h2 data-t="profiles">Profiles</h2><button class="close" data-ta="aClose">✕</button></div>
+  <div id="profileList"></div>
+  <button id="addProfile" class="secondary" data-t="addProfile">+ Add profile</button>
+</aside>
+
+<aside id="editorSheet" class="sheet hidden" role="dialog" aria-modal="true">
+  <div class="sheetHead"><h2 id="editorTitle" data-t="newProfile">New profile</h2></div>
+  <label for="profileName" data-t="name">Name</label><input id="profileName" maxlength="16" autocomplete="off">
+  <div id="avatars" class="grid6"></div>
+  <p id="profileError" class="error" role="alert"></p>
+  <div class="two"><button id="saveProfile" class="primary" data-t="save">Save</button><button id="cancelProfile" class="secondary" data-t="cancel">Cancel</button></div>
+  <button id="deleteProfile" class="danger hidden" data-t="deleteProfile">Delete profile</button>
+</aside>
+
+<aside id="settingsSheet" class="sheet hidden" role="dialog" aria-modal="true">
+  <div class="sheetHead"><h2 data-t="settings">Settings</h2><button class="close" data-ta="aClose">✕</button></div>
+  <label data-t="language">Language</label>
+  <div class="seg"><button data-lang="en">English</button><button data-lang="es">Español</button></div>
+  <label><input id="feedbackToggle" type="checkbox"> <span data-t="instantFeedback">Show feedback after each question</span></label>
+  <label><input id="soundToggle" type="checkbox"> <span data-t="sound">Sound effects</span></label>
+  <label data-t="theme">Theme</label>
+  <div class="seg"><button data-theme="auto" data-t="auto">Auto</button><button data-theme="light" data-t="light">Light</button><button data-theme="dark" data-t="dark">Dark</button></div>
+</aside>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>
