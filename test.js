@@ -208,27 +208,20 @@ assert.deepStrictEqual([bs.th, bs.h, bs.t, bs.u, bs.value, bs.traded], [1, 0, 0,
 bs = L.stepBlocks({ th: 0, h: 0, t: 0, u: 0 }, 'u', -1);
 assert.strictEqual(bs.value, 0, 'cannot go below 0');
 
-// Place-value quiz questions
+// Place-value quiz questions (count each unit kind)
 for (const mode of ['type', 'choice']) {
   const cfg = { ...L.defaultCfg(), ops: ['pv'], count: 60, mode };
-  const kinds = new Set();
   for (let i = 0; i < 10; i++) for (const q of L.makeRound(cfg)) {
     n++;
-    kinds.add(q.pvKind);
     assert.strictEqual(q.op, 'pv');
+    assert.strictEqual(q.pvKind, 'blocks');
+    assert(Array.isArray(q.pvPlaces) && (q.pvPlaces.length === 3 || q.pvPlaces.length === 4), 'pvPlaces list');
     assert(Number.isInteger(q.answer) && q.answer >= 0, 'pv answer int');
     assert(L.TR.en[q.promptKey] && L.TR.es[q.promptKey], 'pv prompt key translated: ' + q.promptKey);
-    if (q.pvKind === 'blocks') assert.strictEqual(q.blocks.th * 1000 + q.blocks.h * 100 + q.blocks.t * 10 + q.blocks.u, q.answer);
-    if (q.pvKind === 'digit') assert.strictEqual(L.decompose(q.promptNum)[q.pvPlace], q.answer);
-    if (q.pvKind === 'equiv') assert.strictEqual(q.answer * q.b, q.a);
-    if (mode === 'choice') {
-      assert.strictEqual(new Set(q.choices).size, 4);
-      assert(q.choices.includes(q.answer));
-    }
+    assert.strictEqual(q.blocks.th * 1000 + q.blocks.h * 100 + q.blocks.t * 10 + q.blocks.u, q.answer);
     const x = L.explain(q);
     assert.strictEqual(x.key, 'xPlaceValue');
   }
-  assert.strictEqual(kinds.size, 3, 'all 3 place-value question types generated');
 }
 assert.strictEqual(L.normalizeProfile({ id: 'h', name: 'A', config: { digits: 100 } }, 'en').config.digits, 100, 'digits=100 preserved');
 assert.strictEqual(L.normalizeProfile({ id: 'h', name: 'A', config: { digits: 99 } }, 'en').config.digits, 1, 'invalid digits reset');

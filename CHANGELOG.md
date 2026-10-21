@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.1 — Place-value per-unit input slots
+### Changed
+- **Place-value quiz (`🧱 Place value`)** now asks the child to type the count of **each unit kind** directly into individual input boxes under the blocks (Thousands, Hundreds, Tens, Ones). Typing a digit automatically moves focus to the next unit box, and Practice mode retries clear only the wrong unit boxes.
+
 ## 3.2.0 — Round hundreds & Place-value blocks (units, tens, hundreds, thousands)
 ### Added
 - **Round-hundreds difficulty (`100s (200+300)`)** for addition and subtraction: operands are multiples of 100 (100–900), subtraction never goes negative, multiple-choice distractors use round hundreds, and explanations/Show me display hundred-flats (`2 + 3 = 5 → 500`).

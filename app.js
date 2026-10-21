@@ -6,7 +6,7 @@
   'use strict';
 
   /** Keep in sync with VERSION in sw.js (test.js enforces this). */
-  const APP_VERSION = '3.2.0';
+  const APP_VERSION = '3.2.1';
 
   /* ------------------------------------------------------------------ */
   /* Translations                                                        */
@@ -45,8 +45,8 @@
       eqTen: '10 units = 1 ten', eqHundred: '10 tens = 1 hundred (100)', eqThousand: '10 hundreds = 1 thousand (1,000)',
       trade10: '✨ 10 units → 1 ten!', trade100: '✨ 10 tens → 1 hundred!', trade1000: '✨ 10 hundreds → 1 thousand!',
       clearBlocks: 'Clear', randomNumber: 'Random number', quizBlocks: 'Practice quiz',
-      pvWhatNumber: 'What number do the blocks show?',
-      pvHowMany1: 'How many units (ones) are in {n}?', pvHowMany10: 'How many tens are in {n}?',
+      pvWhatNumber: 'How many of each block are there?',
+      pvHowMany1: 'How many of each unit are in {n}?', pvHowMany10: 'How many tens are in {n}?',
       pvHowMany100: 'How many hundreds are in {n}?', pvHowMany1000: 'How many thousands are in {n}?',
       pvEquiv10: '1 ten = ? units', pvEquiv100: '1 hundred = ? tens', pvEquiv100b: '1 hundred = ? units',
       pvEquiv1000: '1 thousand = ? hundreds', pvEquiv1000b: '1 thousand = ? units'
@@ -84,8 +84,8 @@
       eqTen: '10 unidades = 1 decena', eqHundred: '10 decenas = 1 centena (100)', eqThousand: '10 centenas = 1 millar (1,000)',
       trade10: '✨ ¡10 unidades → 1 decena!', trade100: '✨ ¡10 decenas → 1 centena!', trade1000: '✨ ¡10 centenas → 1 millar!',
       clearBlocks: 'Limpiar', randomNumber: 'Número al azar', quizBlocks: 'Practicar',
-      pvWhatNumber: '¿Qué número muestran los bloques?',
-      pvHowMany1: '¿Cuántas unidades hay en {n}?', pvHowMany10: '¿Cuántas decenas hay en {n}?',
+      pvWhatNumber: '¿Cuántos bloques hay de cada tipo?',
+      pvHowMany1: '¿Cuántos hay de cada unidad en {n}?', pvHowMany10: '¿Cuántas decenas hay en {n}?',
       pvHowMany100: '¿Cuántas centenas hay en {n}?', pvHowMany1000: '¿Cuántos millares hay en {n}?',
       pvEquiv10: '1 decena = ? unidades', pvEquiv100: '1 centena = ? decenas', pvEquiv100b: '1 centena = ? unidades',
       pvEquiv1000: '1 millar = ? centenas', pvEquiv1000b: '1 millar = ? unidades'
@@ -140,26 +140,11 @@
   ];
 
   function onePlaceValueQuestion(c) {
-    const kind = ri(0, 2); // 0: read blocks, 1: digit in place, 2: equivalence
-    if (kind === 0) {
-      const hasTh = Math.random() < 0.35;
-      const n = (hasTh ? ri(1, 3) * 1000 : 0) + ri(0, 5) * 100 + ri(0, 5) * 10 + ri(1, 6);
-      const q = { op: 'pv', pvKind: 'blocks', a: n, b: 0, answer: n, blocks: decompose(n), promptKey: 'pvWhatNumber', table: null, digits: null, text: `🧱 ${n}` };
-      if (c.mode === 'choice') q.choices = choices(n, 10, 100);
-      return q;
-    }
-    if (kind === 1) {
-      const places = [['pvHowMany1', 'u', 1], ['pvHowMany10', 't', 10], ['pvHowMany100', 'h', 100], ['pvHowMany1000', 'th', 1000]];
-      const [promptKey, key] = places[ri(0, places.length - 1)];
-      const n = ri(1, 4) * 1000 + ri(0, 9) * 100 + ri(0, 9) * 10 + ri(0, 9);
-      const blk = decompose(n), answer = blk[key];
-      const q = { op: 'pv', pvKind: 'digit', pvPlace: key, a: n, b: 0, answer, blocks: blk, promptKey, promptNum: n, table: null, digits: null, text: `${promptKey}:${n}` };
-      if (c.mode === 'choice') q.choices = choices(answer, 1, 2);
-      return q;
-    }
-    const [promptKey, answer, unit, total] = PV_EQUIVS[ri(0, PV_EQUIVS.length - 1)];
-    const q = { op: 'pv', pvKind: 'equiv', a: total, b: unit, answer, blocks: decompose(total), promptKey, table: null, digits: null, text: promptKey };
-    if (c.mode === 'choice') q.choices = [1, 10, 100, 1000].sort(() => Math.random() - 0.5);
+    const hasTh = Math.random() < 0.45;
+    const n = (hasTh ? ri(1, 3) * 1000 : 0) + ri(0, 5) * 100 + ri(0, 5) * 10 + ri(1, 6);
+    const blk = decompose(n), places = hasTh ? ['th', 'h', 't', 'u'] : ['h', 't', 'u'];
+    const q = { op: 'pv', pvKind: 'blocks', pvPlaces: places, a: n, b: 0, answer: n, blocks: blk, promptKey: 'pvWhatNumber', table: null, digits: null, text: `🧱 ${n}` };
+    if (c.mode === 'choice') q.choices = choices(n, 10, 100);
     return q;
   }
 
@@ -529,12 +514,17 @@
     return `<svg class="blk blk-u" viewBox="-1 -1 12 12" aria-hidden="true"><rect class="face-front" x="0" y="0" width="10" height="10" rx="2"/></svg>`;
   }
 
-  function blocksTrayHTML(blk, showEmpty = false) {
+  function blocksTrayHTML(blk, showEmpty = false, inputPlaces = null, values = {}) {
     const groups = [['th', 'pThousands', 1000], ['h', 'pHundreds', 100], ['t', 'pTens', 10], ['u', 'pOnes', 1]];
-    return `<div class="pvTray">${groups.filter(([k]) => showEmpty || blk[k] > 0).map(([k, labelKey, mult]) => {
+    const list = inputPlaces ? groups.filter(([k]) => inputPlaces.includes(k)) : groups.filter(([k]) => showEmpty || blk[k] > 0);
+    return `<div class="pvTray">${list.map(([k, labelKey, mult]) => {
       const count = blk[k] || 0;
       const items = Array(count).fill(blockSVG(k)).join('');
-      return `<div class="pvCol" data-place="${k}"><div class="pvPile">${items || '<span class="pvZero">0</span>'}</div><small>${esc(t(labelKey).replace(':', ''))} <b>${count * mult}</b></small></div>`;
+      const label = esc(t(labelKey).replace(':', ''));
+      const foot = inputPlaces
+        ? `<label class="pvSlotLabel">${label}<button type="button" class="pvSlot" data-slot="${k}">${values[k] !== undefined && values[k] !== '' ? esc(String(values[k])) : '?'}</button></label>`
+        : `<small>${label} <b>${count * mult}</b></small>`;
+      return `<div class="pvCol" data-place="${k}"><div class="pvPile">${items || '<span class="pvZero">0</span>'}</div>${foot}</div>`;
     }).join('')}</div>`;
   }
 
@@ -565,16 +555,43 @@
     return '';
   }
 
+  function pvCombine(places, slots) {
+    const mult = { th: 1000, h: 100, t: 10, u: 1 };
+    return places.reduce((acc, k) => acc + Number(slots[k] || 0) * mult[k], 0);
+  }
+
+  function updatePvSlotsUI() {
+    const q = round.questions[round.i];
+    if (!q || !q.pvPlaces) return;
+    $$('#qBlocks .pvSlot').forEach(b => {
+      const k = b.dataset.slot, v = round.pvSlots[k];
+      b.textContent = v !== undefined && v !== '' ? v : '?';
+      b.classList.toggle('active', !round.answered && round.pvFocus === k);
+    });
+    const allFilled = q.pvPlaces.every(k => round.pvSlots[k] !== undefined && round.pvSlots[k] !== '');
+    $('#qAnswer').textContent = allFilled ? pvCombine(q.pvPlaces, round.pvSlots) : '?';
+  }
+
   function renderQuestion() {
-    const q = round.questions[round.i], mc = P().config.mode === 'choice';
+    const q = round.questions[round.i], isPvSlots = Boolean(q.pvPlaces);
+    const mc = P().config.mode === 'choice' && !isPvSlots;
     round.answered = false; round.input = ''; round.current = null;
+    round.pvSlots = {}; round.pvFocus = isPvSlots ? q.pvPlaces[0] : null;
     const isPv = q.op === 'pv';
     $('#qWrap').classList.toggle('pvPrompt', isPv);
     $('#qText').textContent = questionDisplayText(q);
     $('#qAnswer').textContent = '?'; $('#feedback').textContent = '';
     const qBlocks = $('#qBlocks');
-    if (isPv && q.pvKind !== 'digit') { qBlocks.innerHTML = blocksTrayHTML(q.blocks); qBlocks.classList.remove('hidden'); }
-    else { qBlocks.innerHTML = ''; qBlocks.classList.add('hidden'); }
+    if (isPv && q.pvKind !== 'digit') {
+      qBlocks.innerHTML = blocksTrayHTML(q.blocks, isPvSlots, q.pvPlaces || null, round.pvSlots);
+      qBlocks.classList.remove('hidden');
+      if (isPvSlots) {
+        $$('#qBlocks .pvSlot').forEach(b => {
+          b.onclick = () => { if (!round.answered) { round.pvFocus = b.dataset.slot; updatePvSlotsUI(); } };
+        });
+        updatePvSlotsUI();
+      }
+    } else { qBlocks.innerHTML = ''; qBlocks.classList.add('hidden'); }
     $('#explain').classList.add('hidden'); $('#showMe').classList.add('hidden'); $('#showMe').innerHTML = '';
     $('#nextBtn').classList.add('hidden');
     $('#choices').innerHTML = ''; $('#keypad').innerHTML = '';
@@ -595,6 +612,26 @@
 
   function key(k) {
     if (round.answered) { if (k === '✓') advance(); return; }
+    const q = round.questions[round.i];
+    if (q.pvPlaces) {
+      const places = q.pvPlaces, idx = places.indexOf(round.pvFocus);
+      if (k === '⌫') {
+        if (round.pvSlots[round.pvFocus] !== undefined && round.pvSlots[round.pvFocus] !== '') round.pvSlots[round.pvFocus] = '';
+        else if (idx > 0) { round.pvFocus = places[idx - 1]; round.pvSlots[round.pvFocus] = ''; }
+      } else if (k === '✓') {
+        const missing = places.find(p => round.pvSlots[p] === undefined || round.pvSlots[p] === '');
+        if (missing) { round.pvFocus = missing; updatePvSlotsUI(); return; }
+        submit(pvCombine(places, round.pvSlots));
+        return;
+      } else if (/^[0-9]$/.test(k)) {
+        round.pvSlots[round.pvFocus] = k;
+        const nextEmpty = places.find((p, i) => i > idx && (round.pvSlots[p] === undefined || round.pvSlots[p] === ''));
+        if (nextEmpty) round.pvFocus = nextEmpty;
+        else if (idx < places.length - 1) round.pvFocus = places[idx + 1];
+      }
+      updatePvSlotsUI();
+      return;
+    }
     if (k === '⌫') round.input = round.input.slice(0, -1);
     else if (k === '✓') { if (round.input !== '') submit(Number(round.input)); return; }
     else if (round.input.length < 6) round.input += k;
@@ -603,7 +640,7 @@
 
   function submit(v, btn) {
     if (round.answered) return;
-    const q = round.questions[round.i], c = P().config, mc = c.mode === 'choice';
+    const q = round.questions[round.i], c = P().config, mc = c.mode === 'choice' && !q.pvPlaces;
     const rec = round.current || (round.current = { q, given: [], outcome: null, ok: false });
     attempt(rec, v, settings.feedback && c.feedbackMode === 'practice');
 
@@ -611,12 +648,26 @@
       beep(false);
       $('#feedback').textContent = t('retryPrompt');
       round.input = ''; $('#qAnswer').textContent = '?';
+      if (q.pvPlaces) {
+        const firstWrong = q.pvPlaces.find(p => Number(round.pvSlots[p]) !== q.blocks[p]);
+        q.pvPlaces.forEach(p => { if (Number(round.pvSlots[p]) !== q.blocks[p]) round.pvSlots[p] = ''; });
+        round.pvFocus = firstWrong || q.pvPlaces[0];
+        updatePvSlotsUI();
+      }
       if (btn) { btn.disabled = true; btn.classList.add('tried'); }
       return;
     }
 
     round.results.push(rec); round.current = null; round.answered = true;
     $('#qAnswer').textContent = v;
+    if (q.pvPlaces) {
+      $$('#qBlocks .pvSlot').forEach(b => {
+        const p = b.dataset.slot, right = Number(round.pvSlots[p]) === q.blocks[p];
+        b.classList.remove('active');
+        b.classList.add(right ? 'right' : 'wrong');
+        if (!right) b.textContent = `${round.pvSlots[p]} → ${q.blocks[p]}`;
+      });
+    }
     beep(rec.ok);
     if (settings.feedback) {
       $('#feedback').textContent = rec.outcome === 'first' ? t('great') : rec.outcome === 'retry' ? t('gotItRetry') : `${t('oops')} ${q.answer}`;
@@ -825,10 +876,16 @@
     if (e.key === 'Escape' && !$('#backdrop').classList.contains('hidden')) { closeSheets(); return; }
     if (!round || !$('#quiz').classList.contains('active') || !$('#backdrop').classList.contains('hidden')) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
-    const mc = P().config.mode === 'choice';
+    const q = round.questions[round.i], mc = P().config.mode === 'choice' && !(q && q.pvPlaces);
     if (e.key === 'Enter') {
       e.preventDefault();
       if (round.answered) { if (settings.feedback) advance(); } else if (!mc) key('✓');
+      return;
+    }
+    if (q && q.pvPlaces && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+      const idx = q.pvPlaces.indexOf(round.pvFocus);
+      const next = idx + (e.key === 'ArrowRight' ? 1 : -1);
+      if (next >= 0 && next < q.pvPlaces.length) { round.pvFocus = q.pvPlaces[next]; updatePvSlotsUI(); }
       return;
     }
     if (mc) {
