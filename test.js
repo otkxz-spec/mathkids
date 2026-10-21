@@ -223,6 +223,36 @@ for (const mode of ['type', 'choice']) {
     assert.strictEqual(x.key, 'xPlaceValue');
   }
 }
+
+// Place-value equivalency questions (3.2.2)
+const seenEqPrompts = new Set();
+for (const mode of ['type', 'choice']) {
+  const cfg = { ...L.defaultCfg(), ops: ['pvEq'], count: 60, mode };
+  for (let i = 0; i < 10; i++) for (const q of L.makeRound(cfg)) {
+    n++;
+    seenEqPrompts.add(q.promptKey);
+    assert.strictEqual(q.op, 'pvEq');
+    assert.strictEqual(q.pvKind, 'equiv');
+    assert(Number.isInteger(q.answer) && q.answer > 0, 'pvEq answer > 0');
+    assert(Number.isInteger(q.promptNum) && q.promptNum > 0, 'pvEq promptNum > 0');
+    assert.strictEqual(q.promptNum * q.srcUnit, q.a, 'pvEq src total matches a');
+    assert.strictEqual(q.answer * q.b, q.a, 'pvEq dst total matches a');
+    assert.strictEqual(q.blocks.th * 1000 + q.blocks.h * 100 + q.blocks.t * 10 + q.blocks.u, q.a, 'pvEq blocks total matches a');
+    assert(L.TR.en[q.promptKey] && L.TR.es[q.promptKey], 'pvEq prompt key translated: ' + q.promptKey);
+    assert(L.TR.en[q.promptKey].includes('{n}') && L.TR.es[q.promptKey].includes('{n}'), 'pvEq prompt has {n}: ' + q.promptKey);
+    if (mode === 'choice') {
+      assert.strictEqual(new Set(q.choices).size, 4, '4 unique pvEq choices: ' + q.choices);
+      assert(q.choices.includes(q.answer), 'pvEq choices include answer');
+      assert(q.choices.every(c => Number.isInteger(c) && c > 0), 'pvEq choices positive ints');
+    }
+    const x = L.explain(q);
+    assert.strictEqual(x.key, 'xPlaceValue');
+    assert(x.line.split(/[ ,=→+×−]+/).includes(String(q.answer)), 'pvEq explain line includes answer: ' + x.line);
+    checkChains(x.line, q.text);
+  }
+}
+assert.strictEqual(seenEqPrompts.size, 7, 'all 7 equivalency question templates generated');
+
 assert.strictEqual(L.normalizeProfile({ id: 'h', name: 'A', config: { digits: 100 } }, 'en').config.digits, 100, 'digits=100 preserved');
 assert.strictEqual(L.normalizeProfile({ id: 'h', name: 'A', config: { digits: 99 } }, 'en').config.digits, 1, 'invalid digits reset');
 

@@ -3,7 +3,7 @@
  * immediately when online), falling back to the cache when offline.
  * Bump VERSION on every release.
  */
-const VERSION = 'mathkids-v3.2.1'; // keep in sync with APP_VERSION in app.js
+const VERSION = 'mathkids-v3.2.2'; // keep in sync with APP_VERSION in app.js
 const FILES = ['./', './index.html', './style.css', './app.js', './manifest.json',
   './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 

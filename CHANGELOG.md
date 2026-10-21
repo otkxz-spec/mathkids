@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.2.2 — Place-value equivalency mode
+### Added
+- **Equivalency mode (`⚖️ Equivalency` / `Equivalencias`)** on the Home screen: asks place-value unit conversions in both directions (*"How many hundreds are in X tens?"*, *"How many thousands are in X hundreds?"*, *"How many tens are in X units?"*, *"How many tens are in X hundreds?"*, *"How many hundreds are in X thousands?"*, *"How many units are in X tens / hundreds?"*) in English and Spanish.
+- Works with both **Type answer** and **Multiple choice** modes, with step-by-step place-value explanations and base-ten block visuals in **Show me**.
+- Progress screen tracks **⚖️ Equivalency** accuracy alongside other operations.
+
 ## 3.2.1 — Place-value per-unit input slots
 ### Changed
 - **Place-value quiz (`🧱 Place value`)** now asks the child to type the count of **each unit kind** directly into individual input boxes under the blocks (Thousands, Hundreds, Tens, Ones). Typing a digit automatically moves focus to the next unit box, and Practice mode retries clear only the wrong unit boxes.

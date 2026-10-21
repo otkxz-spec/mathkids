@@ -6,7 +6,7 @@
   'use strict';
 
   /** Keep in sync with VERSION in sw.js (test.js enforces this). */
-  const APP_VERSION = '3.2.1';
+  const APP_VERSION = '3.2.2';
 
   /* ------------------------------------------------------------------ */
   /* Translations                                                        */
@@ -14,7 +14,7 @@
   const TR = {
     en: {
       appName: 'Math Kids', player: 'Player', version: 'Version',
-      practice: 'What do you want to practice?', add: 'Addition', sub: 'Subtraction', mul: 'Multiplication', div: 'Division', pv: 'Place value',
+      practice: 'What do you want to practice?', add: 'Addition', sub: 'Subtraction', mul: 'Multiplication', div: 'Division', pv: 'Place value', pvEq: 'Equivalency',
       difficulty: 'Addition & subtraction difficulty', difficultyHint: 'Controls the number of digits in both numbers (or round hundreds like 200 + 300).',
       digit1: '1 digit', digit2: '2 digits', digit3: '3 digits', digit100: '100s (200+300)',
       tables: 'Which tables?', all: 'All', none: 'None', questions: 'How many questions?', custom: 'Custom',
@@ -49,11 +49,18 @@
       pvHowMany1: 'How many of each unit are in {n}?', pvHowMany10: 'How many tens are in {n}?',
       pvHowMany100: 'How many hundreds are in {n}?', pvHowMany1000: 'How many thousands are in {n}?',
       pvEquiv10: '1 ten = ? units', pvEquiv100: '1 hundred = ? tens', pvEquiv100b: '1 hundred = ? units',
-      pvEquiv1000: '1 thousand = ? hundreds', pvEquiv1000b: '1 thousand = ? units'
+      pvEquiv1000: '1 thousand = ? hundreds', pvEquiv1000b: '1 thousand = ? units',
+      eqH_in_T: 'How many hundreds are in {n} tens?',
+      eqTh_in_H: 'How many thousands are in {n} hundreds?',
+      eqT_in_U: 'How many tens are in {n} units?',
+      eqT_in_H: 'How many tens are in {n} hundreds?',
+      eqH_in_Th: 'How many hundreds are in {n} thousands?',
+      eqU_in_T: 'How many units are in {n} tens?',
+      eqU_in_H: 'How many units are in {n} hundreds?'
     },
     es: {
       appName: 'Mate Kids', player: 'Jugador', version: 'Versión',
-      practice: '¿Qué quieres practicar?', add: 'Suma', sub: 'Resta', mul: 'Multiplicación', div: 'División', pv: 'Valor posicional',
+      practice: '¿Qué quieres practicar?', add: 'Suma', sub: 'Resta', mul: 'Multiplicación', div: 'División', pv: 'Valor posicional', pvEq: 'Equivalencias',
       difficulty: 'Dificultad de suma y resta', difficultyHint: 'Controla la cantidad de dígitos en ambos números (o centenas exactas como 200 + 300).',
       digit1: '1 dígito', digit2: '2 dígitos', digit3: '3 dígitos', digit100: 'Centenas (200+300)',
       tables: '¿Qué tablas?', all: 'Todas', none: 'Ninguna', questions: '¿Cuántas preguntas?', custom: 'Otro',
@@ -88,14 +95,21 @@
       pvHowMany1: '¿Cuántos hay de cada unidad en {n}?', pvHowMany10: '¿Cuántas decenas hay en {n}?',
       pvHowMany100: '¿Cuántas centenas hay en {n}?', pvHowMany1000: '¿Cuántos millares hay en {n}?',
       pvEquiv10: '1 decena = ? unidades', pvEquiv100: '1 centena = ? decenas', pvEquiv100b: '1 centena = ? unidades',
-      pvEquiv1000: '1 millar = ? centenas', pvEquiv1000b: '1 millar = ? unidades'
+      pvEquiv1000: '1 millar = ? centenas', pvEquiv1000b: '1 millar = ? unidades',
+      eqH_in_T: '¿Cuántas centenas hay en {n} decenas?',
+      eqTh_in_H: '¿Cuántos millares hay en {n} centenas?',
+      eqT_in_U: '¿Cuántas decenas hay en {n} unidades?',
+      eqT_in_H: '¿Cuántas decenas hay en {n} centenas?',
+      eqH_in_Th: '¿Cuántas centenas hay en {n} millares?',
+      eqU_in_T: '¿Cuántas unidades hay en {n} decenas?',
+      eqU_in_H: '¿Cuántas unidades hay en {n} centenas?'
     }
   };
 
   /* ------------------------------------------------------------------ */
   /* Pure logic (tested in test.js)                                      */
   /* ------------------------------------------------------------------ */
-  const OPS = [['add', '+'], ['sub', '−'], ['mul', '×'], ['div', '÷'], ['pv', '🧱']];
+  const OPS = [['add', '+'], ['sub', '−'], ['mul', '×'], ['div', '÷'], ['pv', '🧱'], ['pvEq', '⚖️']];
   const AV = ['🦊', '🐼', '🦁', '🐯', '🐸', '🐵', '🐙', '🦄', '🐶', '🐱', '🚀', '⚽'];
   const HISTORY_MAX = 50;
   const COUNT_PRESETS = [5, 10, 15, 20, 30];
@@ -131,13 +145,42 @@
     return s;
   }
 
-  const PV_EQUIVS = [
-    ['pvEquiv10', 10, 1, 10],
-    ['pvEquiv100', 10, 10, 100],
-    ['pvEquiv100b', 100, 1, 100],
-    ['pvEquiv1000', 10, 100, 1000],
-    ['pvEquiv1000b', 1000, 1, 1000]
+  const PV_EQUIV_TEMPLATES = [
+    ['eqH_in_T', 10, 'pTens', 100, 'pHundreds', 'h'],
+    ['eqTh_in_H', 100, 'pHundreds', 1000, 'pThousands', 'th'],
+    ['eqT_in_U', 1, 'pOnes', 10, 'pTens', 't'],
+    ['eqT_in_H', 100, 'pHundreds', 10, 'pTens', 'h'],
+    ['eqH_in_Th', 1000, 'pThousands', 100, 'pHundreds', 'th'],
+    ['eqU_in_T', 10, 'pTens', 1, 'pOnes', 't'],
+    ['eqU_in_H', 100, 'pHundreds', 1, 'pOnes', 'h']
   ];
+
+  function oneEquivQuestion(c) {
+    const [promptKey, srcUnit, srcPlaceKey, dstUnit, dstPlaceKey, blkPlace] = PV_EQUIV_TEMPLATES[ri(0, PV_EQUIV_TEMPLATES.length - 1)];
+    const k = ri(1, 9);
+    const n = srcUnit < dstUnit ? k * (dstUnit / srcUnit) : k;
+    const a = n * srcUnit, ans = a / dstUnit;
+    const blk = { th: 0, h: 0, t: 0, u: 0 }; blk[blkPlace] = k;
+    const q = {
+      op: 'pvEq', pvKind: 'equiv', promptKey, promptNum: n,
+      srcUnit, srcPlaceKey, dstPlaceKey,
+      a, b: dstUnit, answer: ans, blocks: blk,
+      table: null, digits: null, text: `${promptKey}:${n}`
+    };
+    if (c.mode === 'choice') {
+      const step = ans >= 100 ? 100 : ans >= 10 ? 10 : 1;
+      const s = new Set([ans]);
+      const pool = [n, ans * 10, Math.floor(ans / 10), ans + step, ans - step, ans + 2 * step, ans - 2 * step].filter(x => x > 0 && x !== ans);
+      while (s.size < 4) {
+        const x = pool.length ? pool.splice(ri(0, pool.length - 1), 1)[0] : ans + ri(1, 9) * step;
+        if (x > 0) s.add(x);
+      }
+      const out = [...s];
+      for (let i = out.length - 1; i > 0; i--) { const j = ri(0, i); [out[i], out[j]] = [out[j], out[i]]; }
+      q.choices = out;
+    }
+    return q;
+  }
 
   function onePlaceValueQuestion(c) {
     const hasTh = Math.random() < 0.45;
@@ -150,6 +193,7 @@
 
   function oneQuestion(op, c) {
     if (op === 'pv') return onePlaceValueQuestion(c);
+    if (op === 'pvEq') return oneEquivQuestion(c);
     let a, b, answer, table = null;
     if (op === 'add') {
       if (c.digits === 100) { a = ri(1, 9) * 100; b = ri(1, 9) * 100; }
@@ -286,6 +330,17 @@
    */
   function explain(q) {
     const { op, a, b, answer: ans } = q, result = { k: 'xResult', v: `${q.text} = ${ans}` };
+    if (op === 'pvEq') {
+      return {
+        key: 'xPlaceValue',
+        line: `${q.promptNum} × ${q.srcUnit} = ${a} → ${ans} × ${b} = ${a}`,
+        steps: [
+          { k: q.srcPlaceKey, v: `${q.promptNum} × ${q.srcUnit} = ${a}` },
+          { k: q.dstPlaceKey, v: `${ans} × ${b} = ${a}` },
+          result
+        ]
+      };
+    }
     if (op === 'pv') {
       if (q.pvKind === 'equiv') return { key: 'xPlaceValue', line: `${ans} × ${b} = ${a}`, steps: [result] };
       const blk = q.blocks || decompose(a);
@@ -529,6 +584,7 @@
   }
 
   function questionDisplayText(q) {
+    if (q.op === 'pvEq') return t(q.promptKey).replace('{n}', q.promptNum);
     if (q.op !== 'pv') return q.text;
     if (q.pvKind === 'digit') return t(q.promptKey).replace('{n}', q.promptNum);
     return t(q.promptKey);
@@ -542,7 +598,7 @@
   }
   function dotsHTML(q) {
     const row = n => `<span class="dotrow">${'●'.repeat(n)}</span>`;
-    if (q.op === 'pv' && q.blocks) return blocksTrayHTML(q.blocks);
+    if ((q.op === 'pv' || q.op === 'pvEq') && q.blocks) return blocksTrayHTML(q.blocks);
     if ((q.op === 'add' || q.op === 'sub') && q.digits === 100) {
       const ha = q.a / 100, hb = q.b / 100;
       if (q.op === 'add') return `<div class="pvMini">${Array(ha).fill(blockSVG('h')).join('')} <b class="pvOp">+</b> ${Array(hb).fill(blockSVG('h')).join('')}</div>`;
@@ -577,12 +633,12 @@
     const mc = P().config.mode === 'choice' && !isPvSlots;
     round.answered = false; round.input = ''; round.current = null;
     round.pvSlots = {}; round.pvFocus = isPvSlots ? q.pvPlaces[0] : null;
-    const isPv = q.op === 'pv';
+    const isPv = q.op === 'pv' || q.op === 'pvEq';
     $('#qWrap').classList.toggle('pvPrompt', isPv);
     $('#qText').textContent = questionDisplayText(q);
     $('#qAnswer').textContent = '?'; $('#feedback').textContent = '';
     const qBlocks = $('#qBlocks');
-    if (isPv && q.pvKind !== 'digit') {
+    if (q.op === 'pv' && q.pvKind !== 'digit') {
       qBlocks.innerHTML = blocksTrayHTML(q.blocks, isPvSlots, q.pvPlaces || null, round.pvSlots);
       qBlocks.classList.remove('hidden');
       if (isPvSlots) {
