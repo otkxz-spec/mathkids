@@ -235,6 +235,7 @@ for (const mode of ['type', 'choice']) {
     assert.strictEqual(q.pvKind, 'equiv');
     assert(Number.isInteger(q.answer) && q.answer > 0, 'pvEq answer > 0');
     assert(Number.isInteger(q.promptNum) && q.promptNum > 0, 'pvEq promptNum > 0');
+    assert(['th', 'h', 't', 'u'].includes(q.srcPlace) && ['th', 'h', 't', 'u'].includes(q.dstPlace), 'pvEq src/dst place');
     assert.strictEqual(q.promptNum * q.srcUnit, q.a, 'pvEq src total matches a');
     assert.strictEqual(q.answer * q.b, q.a, 'pvEq dst total matches a');
     assert.strictEqual(q.blocks.th * 1000 + q.blocks.h * 100 + q.blocks.t * 10 + q.blocks.u, q.a, 'pvEq blocks total matches a');

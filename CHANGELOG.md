@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.2.3 — Graphical base-ten blocks on Equivalency questions
+### Added
+- **Visual equivalency diagram (`#qBlocks`)** shown on every `⚖️ Equivalency` question:
+  - Left side displays the given units as graphical SVG cubes/flats/rods (or grouped 10-bundles with `10` badges when converting 10–90 units/tens/hundreds).
+  - Right side displays the target block icon (`? × [block]`) which updates live as the child types and reveals the converted blocks when answered.
+  - Bottom scale bar shows the visual unit conversion rule (`1 [larger block] = 10/100 [smaller block]`).
+
 ## 3.2.2 — Place-value equivalency mode
 ### Added
 - **Equivalency mode (`⚖️ Equivalency` / `Equivalencias`)** on the Home screen: asks place-value unit conversions in both directions (*"How many hundreds are in X tens?"*, *"How many thousands are in X hundreds?"*, *"How many tens are in X units?"*, *"How many tens are in X hundreds?"*, *"How many hundreds are in X thousands?"*, *"How many units are in X tens / hundreds?"*) in English and Spanish.

@@ -6,7 +6,7 @@
   'use strict';
 
   /** Keep in sync with VERSION in sw.js (test.js enforces this). */
-  const APP_VERSION = '3.2.2';
+  const APP_VERSION = '3.2.3';
 
   /* ------------------------------------------------------------------ */
   /* Translations                                                        */
@@ -146,24 +146,25 @@
   }
 
   const PV_EQUIV_TEMPLATES = [
-    ['eqH_in_T', 10, 'pTens', 100, 'pHundreds', 'h'],
-    ['eqTh_in_H', 100, 'pHundreds', 1000, 'pThousands', 'th'],
-    ['eqT_in_U', 1, 'pOnes', 10, 'pTens', 't'],
-    ['eqT_in_H', 100, 'pHundreds', 10, 'pTens', 'h'],
-    ['eqH_in_Th', 1000, 'pThousands', 100, 'pHundreds', 'th'],
-    ['eqU_in_T', 10, 'pTens', 1, 'pOnes', 't'],
-    ['eqU_in_H', 100, 'pHundreds', 1, 'pOnes', 'h']
+    ['eqH_in_T', 10, 'pTens', 't', 100, 'pHundreds', 'h'],
+    ['eqTh_in_H', 100, 'pHundreds', 'h', 1000, 'pThousands', 'th'],
+    ['eqT_in_U', 1, 'pOnes', 'u', 10, 'pTens', 't'],
+    ['eqT_in_H', 100, 'pHundreds', 'h', 10, 'pTens', 't'],
+    ['eqH_in_Th', 1000, 'pThousands', 'th', 100, 'pHundreds', 'h'],
+    ['eqU_in_T', 10, 'pTens', 't', 1, 'pOnes', 'u'],
+    ['eqU_in_H', 100, 'pHundreds', 'h', 1, 'pOnes', 'u']
   ];
 
   function oneEquivQuestion(c) {
-    const [promptKey, srcUnit, srcPlaceKey, dstUnit, dstPlaceKey, blkPlace] = PV_EQUIV_TEMPLATES[ri(0, PV_EQUIV_TEMPLATES.length - 1)];
+    const [promptKey, srcUnit, srcPlaceKey, srcPlace, dstUnit, dstPlaceKey, dstPlace] = PV_EQUIV_TEMPLATES[ri(0, PV_EQUIV_TEMPLATES.length - 1)];
     const k = ri(1, 9);
     const n = srcUnit < dstUnit ? k * (dstUnit / srcUnit) : k;
     const a = n * srcUnit, ans = a / dstUnit;
+    const blkPlace = srcUnit < dstUnit ? dstPlace : srcPlace;
     const blk = { th: 0, h: 0, t: 0, u: 0 }; blk[blkPlace] = k;
     const q = {
       op: 'pvEq', pvKind: 'equiv', promptKey, promptNum: n,
-      srcUnit, srcPlaceKey, dstPlaceKey,
+      srcUnit, srcPlaceKey, srcPlace, dstPlaceKey, dstPlace,
       a, b: dstUnit, answer: ans, blocks: blk,
       table: null, digits: null, text: `${promptKey}:${n}`
     };
@@ -583,6 +584,24 @@
     }).join('')}</div>`;
   }
 
+  function equivBlocksHTML(q) {
+    const srcLabel = esc(t(q.srcPlaceKey).replace(':', '')), dstLabel = esc(t(q.dstPlaceKey).replace(':', ''));
+    const srcItems = q.promptNum <= 10
+      ? Array(q.promptNum).fill(blockSVG(q.srcPlace)).join('')
+      : Array(q.promptNum / 10).fill(`<div class="pvBundle" title="10"><div class="pvBundleItems">${Array(10).fill(blockSVG(q.srcPlace)).join('')}</div><span class="pvBundleTag">10</span></div>`).join('');
+    const bigPlace = q.srcUnit > q.b ? q.srcPlace : q.dstPlace;
+    const smallPlace = q.srcUnit > q.b ? q.dstPlace : q.srcPlace;
+    const ratio = Math.max(q.srcUnit, q.b) / Math.min(q.srcUnit, q.b);
+    return `<div class="pvEqWrap">` +
+      `<div class="pvEqRow">` +
+        `<div class="pvCol pvEqSrc" data-place="${q.srcPlace}"><div class="pvPile">${srcItems}</div><small><b>${q.promptNum}</b> ${srcLabel}</small></div>` +
+        `<div class="pvEqSign">=</div>` +
+        `<div class="pvCol pvEqDst" data-place="${q.dstPlace}"><div class="pvPile" id="pvEqTargetPile"><span class="pvEqQ" id="pvEqQ">?</span><span class="pvEqTimes">×</span>${blockSVG(q.dstPlace)}</div><small><b id="pvEqTargetNum">?</b> ${dstLabel}</small></div>` +
+      `</div>` +
+      `<div class="pvEqKey"><span>1 ${blockSVG(bigPlace)}</span> <b>=</b> <span>${ratio} ${blockSVG(smallPlace)}</span></div>` +
+    `</div>`;
+  }
+
   function questionDisplayText(q) {
     if (q.op === 'pvEq') return t(q.promptKey).replace('{n}', q.promptNum);
     if (q.op !== 'pv') return q.text;
@@ -638,7 +657,10 @@
     $('#qText').textContent = questionDisplayText(q);
     $('#qAnswer').textContent = '?'; $('#feedback').textContent = '';
     const qBlocks = $('#qBlocks');
-    if (q.op === 'pv' && q.pvKind !== 'digit') {
+    if (q.op === 'pvEq') {
+      qBlocks.innerHTML = equivBlocksHTML(q);
+      qBlocks.classList.remove('hidden');
+    } else if (q.op === 'pv' && q.pvKind !== 'digit') {
       qBlocks.innerHTML = blocksTrayHTML(q.blocks, isPvSlots, q.pvPlaces || null, round.pvSlots);
       qBlocks.classList.remove('hidden');
       if (isPvSlots) {
@@ -691,7 +713,12 @@
     if (k === '⌫') round.input = round.input.slice(0, -1);
     else if (k === '✓') { if (round.input !== '') submit(Number(round.input)); return; }
     else if (round.input.length < 6) round.input += k;
-    $('#qAnswer').textContent = round.input || '?';
+    const disp = round.input || '?';
+    $('#qAnswer').textContent = disp;
+    if (q.op === 'pvEq') {
+      if ($('#pvEqQ')) $('#pvEqQ').textContent = disp;
+      if ($('#pvEqTargetNum')) $('#pvEqTargetNum').textContent = disp;
+    }
   }
 
   function submit(v, btn) {
@@ -704,6 +731,10 @@
       beep(false);
       $('#feedback').textContent = t('retryPrompt');
       round.input = ''; $('#qAnswer').textContent = '?';
+      if (q.op === 'pvEq') {
+        if ($('#pvEqQ')) $('#pvEqQ').textContent = '?';
+        if ($('#pvEqTargetNum')) $('#pvEqTargetNum').textContent = '?';
+      }
       if (q.pvPlaces) {
         const firstWrong = q.pvPlaces.find(p => Number(round.pvSlots[p]) !== q.blocks[p]);
         q.pvPlaces.forEach(p => { if (Number(round.pvSlots[p]) !== q.blocks[p]) round.pvSlots[p] = ''; });
@@ -716,6 +747,16 @@
 
     round.results.push(rec); round.current = null; round.answered = true;
     $('#qAnswer').textContent = v;
+    if (q.op === 'pvEq') {
+      const dstCol = $('#qBlocks .pvEqDst');
+      if (dstCol) dstCol.classList.add(rec.ok ? 'right' : 'wrong');
+      if ($('#pvEqTargetNum')) $('#pvEqTargetNum').textContent = q.answer;
+      if ($('#pvEqTargetPile')) {
+        $('#pvEqTargetPile').innerHTML = q.answer <= 10
+          ? Array(q.answer).fill(blockSVG(q.dstPlace)).join('')
+          : `<span class="pvEqQ">${q.answer}</span><span class="pvEqTimes">×</span>${blockSVG(q.dstPlace)}`;
+      }
+    }
     if (q.pvPlaces) {
       $$('#qBlocks .pvSlot').forEach(b => {
         const p = b.dataset.slot, right = Number(round.pvSlots[p]) === q.blocks[p];
