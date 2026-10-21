@@ -21,8 +21,8 @@
     <div><button id="progressBtn" data-ta="aProgress">📊</button> <button id="settingsBtn" data-ta="aSettings">⚙️</button></div>
   </header>
   <main>
-    <div class="card"><h2 data-t="practice">What do you want to practice?</h2><div id="ops" class="grid2"></div></div>
-    <div id="difficultyCard" class="card"><h2 data-t="difficulty">Addition &amp; subtraction difficulty</h2><div id="digits" class="grid3"></div><p class="hint" data-t="difficultyHint">Controls the number of digits in both numbers.</p></div>
+    <div class="card"><h2 data-t="practice">What do you want to practice?</h2><div id="ops" class="grid2"></div><button id="exploreBtn" class="secondary exploreBtn" data-t="exploreOpen">🧱 Explore blocks (units, tens, hundreds, thousands)</button></div>
+    <div id="difficultyCard" class="card"><h2 data-t="difficulty">Addition &amp; subtraction difficulty</h2><div id="digits" class="grid2"></div><p class="hint" data-t="difficultyHint">Controls the number of digits in both numbers (or round hundreds like 200 + 300).</p></div>
     <div id="tablesCard" class="card"><div class="row"><h2 data-t="tables">Which tables?</h2><span><button id="allTables" class="link" data-t="all">All</button> <button id="noTables" class="link" data-t="none">None</button></span></div><div id="tables" class="grid6"></div></div>
     <div class="card"><h2 data-t="questions">How many questions?</h2><div id="counts" class="chips"></div><label><span data-t="custom">Custom</span> <input id="customCount" type="number" min="1" max="100" step="1" inputmode="numeric" placeholder="1–100"></label></div>
     <div class="card"><h2 data-t="answerMode">How do you want to answer?</h2><div id="modes" class="grid2"></div><div id="feedbackModes" class="grid2 modeRow"></div><p class="hint" data-t="feedbackModeHint">Practice: one more try after a mistake. Quiz: one try, then the explanation.</p></div>
@@ -38,7 +38,8 @@
     <b id="liveScore">⭐ 0</b>
   </header>
   <main class="quiz">
-    <div class="question" aria-live="polite"><span id="qText"></span> = <span id="qAnswer">?</span></div>
+    <div id="qWrap" class="question" aria-live="polite"><span id="qText"></span> = <span id="qAnswer">?</span></div>
+    <div id="qBlocks" class="qBlocks hidden"></div>
     <div id="feedback" aria-live="assertive"></div>
     <div id="explain" class="explain hidden" aria-live="polite">
       <p id="explainLine"></p>
@@ -88,6 +89,36 @@
     </div>
     <button id="resetProgress" class="danger hidden" data-t="resetProgress">Reset progress</button>
   </main>
+</section>
+
+<section id="exploreScreen" class="screen">
+  <header>
+    <button id="exploreBack" data-ta="aBack">←</button>
+    <h1 data-t="exploreTitle">Place-value blocks</h1>
+    <span></span>
+  </header>
+  <main>
+    <div class="card center">
+      <div id="expTotal" class="expTotal">1,234</div>
+      <div id="expExpanded" class="hint"></div>
+      <div id="expTradeMsg" class="tradeMsg" aria-live="polite"></div>
+      <div id="expTray"></div>
+      <p class="hint" data-t="exploreHint">Tap + to add blocks. 10 of one unit automatically trade for 1 of the next!</p>
+    </div>
+    <div class="card">
+      <div id="expControls" class="grid4"></div>
+      <div class="equivBar">
+        <span data-t="eqTen">10 units = 1 ten</span> ·
+        <span data-t="eqHundred">10 tens = 1 hundred (100)</span> ·
+        <span data-t="eqThousand">10 hundreds = 1 thousand (1,000)</span>
+      </div>
+    </div>
+  </main>
+  <footer class="two">
+    <button id="expClear" class="secondary" data-t="clearBlocks">Clear</button>
+    <button id="expRandom" class="secondary" data-t="randomNumber">Random number</button>
+    <button id="expQuiz" class="primary" data-t="quizBlocks">Practice quiz</button>
+  </footer>
 </section>
 
 <div id="backdrop" class="backdrop hidden"></div>

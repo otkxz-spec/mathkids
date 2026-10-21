@@ -11,6 +11,7 @@
 | 3.0.1 Maintenance (bug fixes, tests, readable source) | ✅ Done |
 | 3.0.2 Visible app version in Settings | ✅ Done |
 | 3.1.1 Retry and explanation flow | ✅ Done (v3.1.0) |
+| 3.4.1 Visual models (round hundreds & base-ten place-value blocks) | ✅ Done (v3.2.0) |
 | 3.1.2 Error-aware answer choices | ⬜ Next |
 | 3.1.3 Skills model | ⬜ |
 | 3.2 Adaptive practice | ⬜ |

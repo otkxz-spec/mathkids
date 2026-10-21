@@ -6,7 +6,7 @@
   'use strict';
 
   /** Keep in sync with VERSION in sw.js (test.js enforces this). */
-  const APP_VERSION = '3.1.0';
+  const APP_VERSION = '3.2.0';
 
   /* ------------------------------------------------------------------ */
   /* Translations                                                        */
@@ -14,9 +14,9 @@
   const TR = {
     en: {
       appName: 'Math Kids', player: 'Player', version: 'Version',
-      practice: 'What do you want to practice?', add: 'Addition', sub: 'Subtraction', mul: 'Multiplication', div: 'Division',
-      difficulty: 'Addition & subtraction difficulty', difficultyHint: 'Controls the number of digits in both numbers.',
-      digit1: '1 digit', digit2: '2 digits', digit3: '3 digits',
+      practice: 'What do you want to practice?', add: 'Addition', sub: 'Subtraction', mul: 'Multiplication', div: 'Division', pv: 'Place value',
+      difficulty: 'Addition & subtraction difficulty', difficultyHint: 'Controls the number of digits in both numbers (or round hundreds like 200 + 300).',
+      digit1: '1 digit', digit2: '2 digits', digit3: '3 digits', digit100: '100s (200+300)',
       tables: 'Which tables?', all: 'All', none: 'None', questions: 'How many questions?', custom: 'Custom',
       answerMode: 'How do you want to answer?', type: 'Type it', choice: 'Multiple choice',
       start: 'Start', next: 'Next', finish: 'Finish', results: 'Results', correct: 'Correct', incorrect: 'Incorrect', time: 'Time',
@@ -37,13 +37,25 @@
       firstTry: 'First try', onRetry: 'On retry', unresolved: 'Unresolved',
       xMakeTen: 'Make 10:', xCountOn: 'Count on:', xColumns: 'Ones first, then tens:', xThinkAdd: 'Think addition:', xCountBack: 'Count back:',
       xGroups: 'Equal groups:', xSplit: 'Split it:', xInverse: 'Use multiplication:', xSkipCount: 'Skip count:', xResult: 'Answer:',
-      pOnes: 'Ones:', pTens: 'Tens:', pHundreds: 'Hundreds:', pThousands: 'Thousands:', carryOne: '→ carry 1', borrowed: '(borrowed 10)'
+      xHundreds: 'Count the hundreds:', xPlaceValue: 'Place value:',
+      pOnes: 'Ones:', pTens: 'Tens:', pHundreds: 'Hundreds:', pThousands: 'Thousands:', carryOne: '→ carry 1', borrowed: '(borrowed 10)',
+      exploreTitle: 'Place-value blocks', exploreOpen: '🧱 Explore blocks (units, tens, hundreds, thousands)',
+      exploreHint: 'Tap + to add blocks. 10 of one unit automatically trade for 1 of the next!',
+      uOne: 'Unit (1)', uTen: 'Ten (10)', uHundred: 'Hundred (100)', uThousand: 'Thousand (1,000)',
+      eqTen: '10 units = 1 ten', eqHundred: '10 tens = 1 hundred (100)', eqThousand: '10 hundreds = 1 thousand (1,000)',
+      trade10: '✨ 10 units → 1 ten!', trade100: '✨ 10 tens → 1 hundred!', trade1000: '✨ 10 hundreds → 1 thousand!',
+      clearBlocks: 'Clear', randomNumber: 'Random number', quizBlocks: 'Practice quiz',
+      pvWhatNumber: 'What number do the blocks show?',
+      pvHowMany1: 'How many units (ones) are in {n}?', pvHowMany10: 'How many tens are in {n}?',
+      pvHowMany100: 'How many hundreds are in {n}?', pvHowMany1000: 'How many thousands are in {n}?',
+      pvEquiv10: '1 ten = ? units', pvEquiv100: '1 hundred = ? tens', pvEquiv100b: '1 hundred = ? units',
+      pvEquiv1000: '1 thousand = ? hundreds', pvEquiv1000b: '1 thousand = ? units'
     },
     es: {
       appName: 'Mate Kids', player: 'Jugador', version: 'Versión',
-      practice: '¿Qué quieres practicar?', add: 'Suma', sub: 'Resta', mul: 'Multiplicación', div: 'División',
-      difficulty: 'Dificultad de suma y resta', difficultyHint: 'Controla la cantidad de dígitos en ambos números.',
-      digit1: '1 dígito', digit2: '2 dígitos', digit3: '3 dígitos',
+      practice: '¿Qué quieres practicar?', add: 'Suma', sub: 'Resta', mul: 'Multiplicación', div: 'División', pv: 'Valor posicional',
+      difficulty: 'Dificultad de suma y resta', difficultyHint: 'Controla la cantidad de dígitos en ambos números (o centenas exactas como 200 + 300).',
+      digit1: '1 dígito', digit2: '2 dígitos', digit3: '3 dígitos', digit100: 'Centenas (200+300)',
       tables: '¿Qué tablas?', all: 'Todas', none: 'Ninguna', questions: '¿Cuántas preguntas?', custom: 'Otro',
       answerMode: '¿Cómo quieres responder?', type: 'Escribir', choice: 'Opción múltiple',
       start: 'Empezar', next: 'Siguiente', finish: 'Terminar', results: 'Resultados', correct: 'Correctas', incorrect: 'Incorrectas', time: 'Tiempo',
@@ -64,17 +76,30 @@
       firstTry: 'Al primer intento', onRetry: 'Al reintentar', unresolved: 'Sin resolver',
       xMakeTen: 'Forma 10:', xCountOn: 'Cuenta hacia adelante:', xColumns: 'Primero unidades, luego decenas:', xThinkAdd: 'Piensa en una suma:', xCountBack: 'Cuenta hacia atrás:',
       xGroups: 'Grupos iguales:', xSplit: 'Divídelo:', xInverse: 'Usa la multiplicación:', xSkipCount: 'Cuenta saltando:', xResult: 'Respuesta:',
-      pOnes: 'Unidades:', pTens: 'Decenas:', pHundreds: 'Centenas:', pThousands: 'Millares:', carryOne: '→ llevas 1', borrowed: '(pediste 10)'
+      xHundreds: 'Cuenta las centenas:', xPlaceValue: 'Valor posicional:',
+      pOnes: 'Unidades:', pTens: 'Decenas:', pHundreds: 'Centenas:', pThousands: 'Millares:', carryOne: '→ llevas 1', borrowed: '(pediste 10)',
+      exploreTitle: 'Bloques de valor posicional', exploreOpen: '🧱 Explorar bloques (unidades, decenas, centenas, millares)',
+      exploreHint: 'Toca + para agregar bloques. ¡10 de una unidad se cambian automáticamente por 1 de la siguiente!',
+      uOne: 'Unidad (1)', uTen: 'Decena (10)', uHundred: 'Centena (100)', uThousand: 'Millar (1,000)',
+      eqTen: '10 unidades = 1 decena', eqHundred: '10 decenas = 1 centena (100)', eqThousand: '10 centenas = 1 millar (1,000)',
+      trade10: '✨ ¡10 unidades → 1 decena!', trade100: '✨ ¡10 decenas → 1 centena!', trade1000: '✨ ¡10 centenas → 1 millar!',
+      clearBlocks: 'Limpiar', randomNumber: 'Número al azar', quizBlocks: 'Practicar',
+      pvWhatNumber: '¿Qué número muestran los bloques?',
+      pvHowMany1: '¿Cuántas unidades hay en {n}?', pvHowMany10: '¿Cuántas decenas hay en {n}?',
+      pvHowMany100: '¿Cuántas centenas hay en {n}?', pvHowMany1000: '¿Cuántos millares hay en {n}?',
+      pvEquiv10: '1 decena = ? unidades', pvEquiv100: '1 centena = ? decenas', pvEquiv100b: '1 centena = ? unidades',
+      pvEquiv1000: '1 millar = ? centenas', pvEquiv1000b: '1 millar = ? unidades'
     }
   };
 
   /* ------------------------------------------------------------------ */
   /* Pure logic (tested in test.js)                                      */
   /* ------------------------------------------------------------------ */
-  const OPS = [['add', '+'], ['sub', '−'], ['mul', '×'], ['div', '÷']];
+  const OPS = [['add', '+'], ['sub', '−'], ['mul', '×'], ['div', '÷'], ['pv', '🧱']];
   const AV = ['🦊', '🐼', '🦁', '🐯', '🐸', '🐵', '🐙', '🦄', '🐶', '🐱', '🚀', '⚽'];
   const HISTORY_MAX = 50;
   const COUNT_PRESETS = [5, 10, 15, 20, 30];
+  const DIGIT_LEVELS = [1, 2, 3, 100];
 
   const emptyStats = () => ({ rounds: 0, questions: 0, correct: 0, firstTry: 0, retry: 0, ops: {}, digits: {}, tables: {}, days: [], history: [] });
   const defaultCfg = () => ({ ops: ['add'], digits: 1, tables: [2, 3, 4, 5], count: 10, mode: 'type', feedbackMode: 'practice' });
@@ -84,12 +109,70 @@
   function bounds(d) { return d === 1 ? [1, 9] : d === 2 ? [10, 99] : [100, 999]; }
   function ri(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
 
+  /** Breaks a number (0..9999) into place-value block counts. */
+  function decompose(n) {
+    return { th: Math.floor(n / 1000) % 10, h: Math.floor(n / 100) % 10, t: Math.floor(n / 10) % 10, u: n % 10 };
+  }
+
+  /**
+   * Adds or removes one block in the explorer and performs 10-for-1 trading.
+   * Returns { th, h, t, u, value, traded: null | 'trade10' | 'trade100' | 'trade1000' }.
+   */
+  function stepBlocks(state, place, delta) {
+    const s = { th: state.th || 0, h: state.h || 0, t: state.t || 0, u: state.u || 0 };
+    s[place] = Math.max(0, s[place] + delta);
+    let traded = null;
+    if (s.u >= 10) { s.t += Math.floor(s.u / 10); s.u %= 10; traded = 'trade10'; }
+    if (s.t >= 10) { s.h += Math.floor(s.t / 10); s.t %= 10; traded = 'trade100'; }
+    if (s.h >= 10 && s.th < 9) { const c = Math.min(9 - s.th, Math.floor(s.h / 10)); s.th += c; s.h -= c * 10; traded = 'trade1000'; }
+    s.th = Math.min(9, s.th); s.h = Math.min(9, s.h);
+    s.value = s.th * 1000 + s.h * 100 + s.t * 10 + s.u;
+    s.traded = traded;
+    return s;
+  }
+
+  const PV_EQUIVS = [
+    ['pvEquiv10', 10, 1, 10],
+    ['pvEquiv100', 10, 10, 100],
+    ['pvEquiv100b', 100, 1, 100],
+    ['pvEquiv1000', 10, 100, 1000],
+    ['pvEquiv1000b', 1000, 1, 1000]
+  ];
+
+  function onePlaceValueQuestion(c) {
+    const kind = ri(0, 2); // 0: read blocks, 1: digit in place, 2: equivalence
+    if (kind === 0) {
+      const hasTh = Math.random() < 0.35;
+      const n = (hasTh ? ri(1, 3) * 1000 : 0) + ri(0, 5) * 100 + ri(0, 5) * 10 + ri(1, 6);
+      const q = { op: 'pv', pvKind: 'blocks', a: n, b: 0, answer: n, blocks: decompose(n), promptKey: 'pvWhatNumber', table: null, digits: null, text: `🧱 ${n}` };
+      if (c.mode === 'choice') q.choices = choices(n, 10, 100);
+      return q;
+    }
+    if (kind === 1) {
+      const places = [['pvHowMany1', 'u', 1], ['pvHowMany10', 't', 10], ['pvHowMany100', 'h', 100], ['pvHowMany1000', 'th', 1000]];
+      const [promptKey, key] = places[ri(0, places.length - 1)];
+      const n = ri(1, 4) * 1000 + ri(0, 9) * 100 + ri(0, 9) * 10 + ri(0, 9);
+      const blk = decompose(n), answer = blk[key];
+      const q = { op: 'pv', pvKind: 'digit', pvPlace: key, a: n, b: 0, answer, blocks: blk, promptKey, promptNum: n, table: null, digits: null, text: `${promptKey}:${n}` };
+      if (c.mode === 'choice') q.choices = choices(answer, 1, 2);
+      return q;
+    }
+    const [promptKey, answer, unit, total] = PV_EQUIVS[ri(0, PV_EQUIVS.length - 1)];
+    const q = { op: 'pv', pvKind: 'equiv', a: total, b: unit, answer, blocks: decompose(total), promptKey, table: null, digits: null, text: promptKey };
+    if (c.mode === 'choice') q.choices = [1, 10, 100, 1000].sort(() => Math.random() - 0.5);
+    return q;
+  }
+
   function oneQuestion(op, c) {
+    if (op === 'pv') return onePlaceValueQuestion(c);
     let a, b, answer, table = null;
     if (op === 'add') {
-      const [lo, hi] = bounds(c.digits); a = ri(lo, hi); b = ri(lo, hi); answer = a + b;
+      if (c.digits === 100) { a = ri(1, 9) * 100; b = ri(1, 9) * 100; }
+      else { const [lo, hi] = bounds(c.digits); a = ri(lo, hi); b = ri(lo, hi); }
+      answer = a + b;
     } else if (op === 'sub') {
-      const [lo, hi] = bounds(c.digits); a = ri(lo, hi); b = ri(lo, hi);
+      if (c.digits === 100) { a = ri(1, 9) * 100; b = ri(1, 9) * 100; }
+      else { const [lo, hi] = bounds(c.digits); a = ri(lo, hi); b = ri(lo, hi); }
       if (b > a) [a, b] = [b, a];
       answer = a - b;
     } else if (op === 'mul') {
@@ -108,9 +191,10 @@
 
   function choices(ans, a, b) {
     const s = new Set([ans]);
-    const pool = [ans + 1, ans - 1, ans + 2, ans - 2, ans + 3, ans - 3, ans + a, ans - a, ans + b, ans - b].filter(x => x >= 0 && x !== ans);
+    const step = (ans % 100 === 0 && a >= 100 && b >= 100 && a % 100 === 0 && b % 100 === 0) ? 100 : 1;
+    const pool = [ans + step, ans - step, ans + 2 * step, ans - 2 * step, ans + 3 * step, ans - 3 * step, ans + a, ans - a, ans + b, ans - b].filter(x => x >= 0 && x !== ans);
     while (s.size < 4) {
-      let x = pool.length ? pool.splice(ri(0, pool.length - 1), 1)[0] : ans + ri(1, 10);
+      let x = pool.length ? pool.splice(ri(0, pool.length - 1), 1)[0] : ans + ri(1, 10) * step;
       s.add(x);
     }
     const out = [...s];
@@ -217,7 +301,21 @@
    */
   function explain(q) {
     const { op, a, b, answer: ans } = q, result = { k: 'xResult', v: `${q.text} = ${ans}` };
+    if (op === 'pv') {
+      if (q.pvKind === 'equiv') return { key: 'xPlaceValue', line: `${ans} × ${b} = ${a}`, steps: [result] };
+      const blk = q.blocks || decompose(a);
+      const parts = [blk.th * 1000, blk.h * 100, blk.t * 10, blk.u].filter(x => x > 0);
+      const sumLine = parts.length > 1 ? `${parts.join(' + ')} = ${a}` : `${a} = ${a}`;
+      const placeSteps = [['pThousands', blk.th], ['pHundreds', blk.h], ['pTens', blk.t], ['pOnes', blk.u]]
+        .filter(([, v]) => v > 0 || q.pvKind === 'digit')
+        .map(([k, v]) => ({ k, v: String(v) }));
+      return { key: 'xPlaceValue', line: q.pvKind === 'blocks' ? sumLine : `${sumLine} → ${ans}`, steps: [...placeSteps, result] };
+    }
     if (op === 'add') {
+      if (q.digits === 100) {
+        const ha = a / 100, hb = b / 100, hs = ans / 100;
+        return { key: 'xHundreds', line: `${ha} + ${hb} = ${hs} → ${ans}`, steps: [{ k: 'pHundreds', v: `${ha} + ${hb} = ${hs}` }, result] };
+      }
       if (a < 10 && b < 10) {
         const big = Math.max(a, b), small = Math.min(a, b);
         if (ans > 10) {
@@ -230,6 +328,10 @@
       return { key: 'xColumns', line: `${steps.filter(s => s.v.includes('=')).map(s => s.v).join(', ')} → ${ans}`, steps: [...steps, result] };
     }
     if (op === 'sub') {
+      if (q.digits === 100) {
+        const ha = a / 100, hb = b / 100, hs = ans / 100;
+        return { key: 'xHundreds', line: `${ha} − ${hb} = ${hs} → ${ans}`, steps: [{ k: 'pHundreds', v: `${ha} − ${hb} = ${hs}` }, result] };
+      }
       const line = `${b} + ${ans} = ${a}`;
       if (a < 20 && b < 10) return { key: 'xThinkAdd', line, steps: [{ k: 'xCountBack', v: `${a} → ${seq(a - 1, ans, -1).join(', ')}` }, result] };
       return { key: 'xThinkAdd', line, steps: [...columnSub(a, b), result] };
@@ -277,14 +379,15 @@
   function normalizeProfile(p, lang) {
     const config = { ...defaultCfg(), ...(p.config || {}) };
     if (!Number.isInteger(config.count) || config.count < 1 || config.count > 100) config.count = 10;
+    if (!DIGIT_LEVELS.includes(config.digits)) config.digits = 1;
     if (config.feedbackMode !== 'practice' && config.feedbackMode !== 'quiz') config.feedbackMode = 'practice';
     let name = p.name;
     if (!name || name === 'Player profile') name = defaultName(lang, 1); // fix v3 naming bug
     return { ...p, name, config, stats: { ...emptyStats(), ...(p.stats || {}) } };
   }
 
-  const core = { APP_VERSION, TR, OPS, HISTORY_MAX, emptyStats, defaultCfg, defaultName, bounds, oneQuestion, choices, makeRound,
-    validateConfig, dayKey, streak, recordRound, percent, level, normalizeProfile, attempt, scoreRound, explain };
+  const core = { APP_VERSION, TR, OPS, DIGIT_LEVELS, HISTORY_MAX, emptyStats, defaultCfg, defaultName, bounds, decompose, stepBlocks,
+    oneQuestion, choices, makeRound, validateConfig, dayKey, streak, recordRound, percent, level, normalizeProfile, attempt, scoreRound, explain };
   if (typeof module !== 'undefined' && module.exports) module.exports = core;
   root.MathKidsTest = core;
   if (typeof document === 'undefined') return;
@@ -323,6 +426,7 @@
     document.title = t('appName');
     $('#appVersion').textContent = `${t('version')} ${APP_VERSION}`;
     renderHome(); renderProfileHeaders(); applySettingsUI();
+    if ($('#exploreScreen').classList.contains('active')) renderExplore();
   }
 
   const darkQuery = matchMedia('(prefers-color-scheme: dark)');
@@ -366,7 +470,7 @@
 
     $('#difficultyCard').classList.toggle('hidden', !c.ops.some(o => o === 'add' || o === 'sub'));
     $('#digits').innerHTML = '';
-    [1, 2, 3].forEach(d => $('#digits').append(chip(t('digit' + d), c.digits === d, () => { c.digits = d; saveAll(); renderHome(); })));
+    DIGIT_LEVELS.forEach(d => $('#digits').append(chip(t('digit' + d), c.digits === d, () => { c.digits = d; saveAll(); renderHome(); })));
 
     $('#tablesCard').classList.toggle('hidden', !c.ops.some(o => o === 'mul' || o === 'div'));
     $('#tables').innerHTML = '';
@@ -400,6 +504,46 @@
     show('quiz'); renderQuestion();
   }
 
+  /* Base-ten blocks rendering (1000 cube, 100 flat, 10 rod, 1 unit). */
+  function blockSVG(kind) {
+    if (kind === 'th') {
+      let lines = '';
+      for (let i = 1; i < 10; i++) {
+        const p = i * 3.6;
+        lines += `<line x1="${p}" y1="12" x2="${p}" y2="48"/><line x1="0" y1="${12 + p}" x2="36" y2="${12 + p}"/>`;
+        lines += `<line x1="${p}" y1="12" x2="${p + 12}" y2="0"/><line x1="${i * 1.2}" y1="${12 - i * 1.2}" x2="${36 + i * 1.2}" y2="${12 - i * 1.2}"/>`;
+        lines += `<line x1="36" y1="${12 + p}" x2="48" y2="${p}"/><line x1="${36 + i * 1.2}" y1="${12 - i * 1.2}" x2="${36 + i * 1.2}" y2="${48 - i * 1.2}"/>`;
+      }
+      return `<svg class="blk blk-th" viewBox="-1 -1 50 50" aria-hidden="true"><polygon class="face-top" points="0,12 12,0 48,0 36,12"/><polygon class="face-side" points="36,12 48,0 48,36 36,48"/><rect class="face-front" x="0" y="12" width="36" height="36"/><g class="gridlines">${lines}</g></svg>`;
+    }
+    if (kind === 'h') {
+      let lines = '';
+      for (let i = 1; i < 10; i++) { const p = i * 3.4; lines += `<line x1="${p}" y1="0" x2="${p}" y2="34"/><line x1="0" y1="${p}" x2="34" y2="${p}"/>`; }
+      return `<svg class="blk blk-h" viewBox="-1 -1 36 36" aria-hidden="true"><rect class="face-front" x="0" y="0" width="34" height="34" rx="2"/><g class="gridlines">${lines}</g></svg>`;
+    }
+    if (kind === 't') {
+      let lines = '';
+      for (let i = 1; i < 10; i++) lines += `<line x1="0" y1="${i * 3.4}" x2="8" y2="${i * 3.4}"/>`;
+      return `<svg class="blk blk-t" viewBox="-1 -1 10 36" aria-hidden="true"><rect class="face-front" x="0" y="0" width="8" height="34" rx="1.5"/><g class="gridlines">${lines}</g></svg>`;
+    }
+    return `<svg class="blk blk-u" viewBox="-1 -1 12 12" aria-hidden="true"><rect class="face-front" x="0" y="0" width="10" height="10" rx="2"/></svg>`;
+  }
+
+  function blocksTrayHTML(blk, showEmpty = false) {
+    const groups = [['th', 'pThousands', 1000], ['h', 'pHundreds', 100], ['t', 'pTens', 10], ['u', 'pOnes', 1]];
+    return `<div class="pvTray">${groups.filter(([k]) => showEmpty || blk[k] > 0).map(([k, labelKey, mult]) => {
+      const count = blk[k] || 0;
+      const items = Array(count).fill(blockSVG(k)).join('');
+      return `<div class="pvCol" data-place="${k}"><div class="pvPile">${items || '<span class="pvZero">0</span>'}</div><small>${esc(t(labelKey).replace(':', ''))} <b>${count * mult}</b></small></div>`;
+    }).join('')}</div>`;
+  }
+
+  function questionDisplayText(q) {
+    if (q.op !== 'pv') return q.text;
+    if (q.pvKind === 'digit') return t(q.promptKey).replace('{n}', q.promptNum);
+    return t(q.promptKey);
+  }
+
   /* Explanation rendering (text comes from explain(); all inserted strings are escaped). */
   function explainHTML(q) { const x = explain(q); return `<b>${esc(t(x.key))}</b> ${esc(x.line)}`; }
   function stepsHTML(q) {
@@ -408,6 +552,12 @@
   }
   function dotsHTML(q) {
     const row = n => `<span class="dotrow">${'●'.repeat(n)}</span>`;
+    if (q.op === 'pv' && q.blocks) return blocksTrayHTML(q.blocks);
+    if ((q.op === 'add' || q.op === 'sub') && q.digits === 100) {
+      const ha = q.a / 100, hb = q.b / 100;
+      if (q.op === 'add') return `<div class="pvMini">${Array(ha).fill(blockSVG('h')).join('')} <b class="pvOp">+</b> ${Array(hb).fill(blockSVG('h')).join('')}</div>`;
+      return `<div class="pvMini">${Array(ha - hb).fill(blockSVG('h')).join('')}<span class="pvCross">${Array(hb).fill(blockSVG('h')).join('')}</span></div>`;
+    }
     if (q.op === 'add' && q.a < 10 && q.b < 10) return `<div class="dots">${row(q.a)} + ${row(q.b)}</div>`;
     if (q.op === 'sub' && q.a < 20 && q.b < 10) return `<div class="dots"><span class="dotrow">${'●'.repeat(q.answer)}<s>${'●'.repeat(q.b)}</s></span></div>`;
     if (q.op === 'mul' && q.answer <= 72) { const t0 = q.table || q.b, o = q.a === t0 ? q.b : q.a; return `<div class="dots">${Array(o).fill(row(t0)).join('<br>')}</div>`; }
@@ -418,7 +568,13 @@
   function renderQuestion() {
     const q = round.questions[round.i], mc = P().config.mode === 'choice';
     round.answered = false; round.input = ''; round.current = null;
-    $('#qText').textContent = q.text; $('#qAnswer').textContent = '?'; $('#feedback').textContent = '';
+    const isPv = q.op === 'pv';
+    $('#qWrap').classList.toggle('pvPrompt', isPv);
+    $('#qText').textContent = questionDisplayText(q);
+    $('#qAnswer').textContent = '?'; $('#feedback').textContent = '';
+    const qBlocks = $('#qBlocks');
+    if (isPv && q.pvKind !== 'digit') { qBlocks.innerHTML = blocksTrayHTML(q.blocks); qBlocks.classList.remove('hidden'); }
+    else { qBlocks.innerHTML = ''; qBlocks.classList.add('hidden'); }
     $('#explain').classList.add('hidden'); $('#showMe').classList.add('hidden'); $('#showMe').innerHTML = '';
     $('#nextBtn').classList.add('hidden');
     $('#choices').innerHTML = ''; $('#keypad').innerHTML = '';
@@ -503,7 +659,8 @@
     const icon = { first: '✔', retry: '🔁', unresolved: '✘' };
     $('#answers').innerHTML = round.results.map(r => {
       const wrong = r.given.filter(g => g !== r.q.answer);
-      return `<div class="answerRow"><b>${icon[r.outcome]}</b><span class="grow">${esc(r.q.text)} = ${r.q.answer}${r.outcome !== 'first' ? `<small class="explainSmall">${explainHTML(r.q)}</small>` : ''}</span>${wrong.length ? `<small><s>${wrong.map(esc).join(' ')}</s></small>` : ''}</div>`;
+      const qLabel = questionDisplayText(r.q);
+      return `<div class="answerRow"><b>${icon[r.outcome]}</b><span class="grow">${esc(qLabel)} = ${r.q.answer}${r.outcome !== 'first' ? `<small class="explainSmall">${explainHTML(r.q)}</small>` : ''}</span>${wrong.length ? `<small><s>${wrong.map(esc).join(' ')}</s></small>` : ''}</div>`;
     }).join('');
     $('#answersBtn').textContent = t('showAnswers');
   }
@@ -521,7 +678,7 @@
     $('#tiles').innerHTML = [[s.rounds, t('rounds')], [s.questions, t('questions')], [percent(s.correct, s.questions) + '%', t('accuracy')], ['🔥 ' + streak(s.days), t('streak')]]
       .map(x => `<div class="tile"><b>${x[0]}</b><small>${x[1]}</small></div>`).join('');
     $('#opStats').innerHTML = OPS.map(([o, sym]) => statRow(`${sym} ${t(o)}`, s.ops[o])).join('');
-    $('#difficultyStats').innerHTML = [['add', 1], ['add', 2], ['add', 3], ['sub', 1], ['sub', 2], ['sub', 3]]
+    $('#difficultyStats').innerHTML = [['add', 1], ['add', 2], ['add', 3], ['add', 100], ['sub', 1], ['sub', 2], ['sub', 3], ['sub', 100]]
       .map(([o, d]) => statRow(`${symbolOf(o)} ${t('digit' + d)}`, s.digits[`${o}-${d}`])).join('');
     $('#tableStats').innerHTML = '';
     for (let n = 1; n <= 12; n++) {
@@ -580,7 +737,51 @@
     $('#feedbackToggle').checked = settings.feedback; $('#soundToggle').checked = settings.sound;
   }
 
+  /* ----- Place-value interactive explorer ----- */
+  let expState = { th: 1, h: 2, t: 3, u: 4, value: 1234, traded: null };
+
+  function openExplore() {
+    renderExplore();
+    show('exploreScreen');
+  }
+
+  function renderExplore() {
+    const s = expState;
+    $('#expTotal').textContent = s.value.toLocaleString(settings.lang);
+    const parts = [];
+    if (s.th) parts.push(`${s.th} × 1000 (${s.th * 1000})`);
+    if (s.h) parts.push(`${s.h} × 100 (${s.h * 100})`);
+    if (s.t) parts.push(`${s.t} × 10 (${s.t * 10})`);
+    if (s.u || !parts.length) parts.push(`${s.u} × 1 (${s.u})`);
+    $('#expExpanded').textContent = parts.join(' + ') + ` = ${s.value}`;
+    $('#expTradeMsg').textContent = s.traded ? t(s.traded) : '';
+    $('#expTray').innerHTML = blocksTrayHTML(s, true);
+    const controls = [['th', 'uThousand'], ['h', 'uHundred'], ['t', 'uTen'], ['u', 'uOne']];
+    $('#expControls').innerHTML = '';
+    controls.forEach(([k, labelKey]) => {
+      const box = document.createElement('div');
+      box.className = 'expCtrl';
+      box.innerHTML = `<div class="expIcon">${blockSVG(k)}</div><small>${esc(t(labelKey))}</small><div class="expBtns"><button class="minus" aria-label="-">−</button><b>${s[k]}</b><button class="plus" aria-label="+">+</button></div>`;
+      box.querySelector('.minus').onclick = () => { expState = stepBlocks(expState, k, -1); renderExplore(); };
+      box.querySelector('.plus').onclick = () => { expState = stepBlocks(expState, k, 1); if (expState.traded) beep(true); renderExplore(); };
+      $('#expControls').append(box);
+    });
+  }
+
   /* ----- event wiring ----- */
+  $('#exploreBtn').onclick = openExplore;
+  $('#exploreBack').onclick = () => show('home');
+  $('#expClear').onclick = () => { expState = { th: 0, h: 0, t: 0, u: 0, value: 0, traded: null }; renderExplore(); };
+  $('#expRandom').onclick = () => {
+    const n = ri(1, 3) * 1000 + ri(0, 6) * 100 + ri(0, 7) * 10 + ri(1, 8);
+    expState = { ...decompose(n), value: n, traded: null };
+    renderExplore();
+  };
+  $('#expQuiz').onclick = () => {
+    const c = P().config;
+    if (!c.ops.includes('pv')) c.ops = ['pv'];
+    saveAll(); renderHome(); start();
+  };
   $('#allTables').onclick = () => { P().config.tables = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; saveAll(); renderHome(); };
   $('#noTables').onclick = () => { P().config.tables = []; saveAll(); renderHome(); };
   $('#customCount').oninput = () => { $('#error').textContent = ''; };

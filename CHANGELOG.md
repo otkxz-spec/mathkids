@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.2.0 — Round hundreds & Place-value blocks (units, tens, hundreds, thousands)
+### Added
+- **Round-hundreds difficulty (`100s (200+300)`)** for addition and subtraction: operands are multiples of 100 (100–900), subtraction never goes negative, multiple-choice distractors use round hundreds, and explanations/Show me display hundred-flats (`2 + 3 = 5 → 500`).
+- **Place-value mode (`🧱 Place value`)** on the Home screen plus an interactive **Explore blocks** playground:
+  - Graphical SVG base-ten blocks: unit cube (1), ten rod (10 units), hundred flat (10×10 = 100), and 3D thousand cube (10×10×10 = 1,000).
+  - Automatic 10-for-1 trading in the explorer (`10 units → 1 ten`, `10 tens → 1 hundred`, `10 hundreds → 1 thousand`).
+  - Place-value quiz covering reading block diagrams, identifying units/tens/hundreds/thousands in a number, and block equivalences (`1 thousand = 10 hundreds = 1,000 units`).
+- Progress tracks `add-100`, `sub-100`, and `pv` accuracy.
+
 ## 3.1.0 — Retry and explanation flow (roadmap 3.1.1)
 ### Added
 - **Practice / Quiz mode** per profile (Home → "How do you want to answer?"). Default: Practice.

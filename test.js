@@ -174,6 +174,65 @@ assert(L.explain({ op: 'add', a: 47, b: 38, answer: 85, text: '47 + 38' }).steps
 assert(L.explain({ op: 'sub', a: 52, b: 17, answer: 35, text: '52 − 17' }).steps[0].borrow, 'ones column borrows');
 assert.strictEqual(L.explain({ op: 'add', a: 999, b: 999, answer: 1998, text: '999 + 999' }).steps.filter(s => /^p/.test(s.k)).length, 4, 'thousands carry');
 
+/* ---------- 3.2.0 round hundreds & place value ---------- */
+// Round hundreds (digits = 100): operands 100..900, multiples of 100, non-negative sub, hundred-step choices
+for (const mode of ['type', 'choice']) {
+  const cfg = { ...L.defaultCfg(), ops: ['add', 'sub'], digits: 100, count: 50, mode };
+  for (let i = 0; i < 10; i++) for (const q of L.makeRound(cfg)) {
+    n++;
+    assert(q.a >= 100 && q.a <= 900 && q.a % 100 === 0, 'a is round hundred: ' + q.text);
+    assert(q.b >= 100 && q.b <= 900 && q.b % 100 === 0, 'b is round hundred: ' + q.text);
+    assert.strictEqual(q.digits, 100);
+    if (q.op === 'add') assert.strictEqual(q.a + q.b, q.answer);
+    if (q.op === 'sub') { assert.strictEqual(q.a - q.b, q.answer); assert(q.answer >= 0, 'non-negative hundred sub'); }
+    if (mode === 'choice') {
+      assert.strictEqual(new Set(q.choices).size, 4);
+      assert(q.choices.includes(q.answer));
+      assert(q.choices.every(c => c >= 0 && c % 100 === 0), 'round-hundred choices: ' + q.choices);
+    }
+    const x = L.explain(q);
+    assert.strictEqual(x.key, 'xHundreds');
+    assert(x.line.endsWith('→ ' + q.answer), 'hundreds explain line: ' + x.line);
+  }
+}
+
+// Place-value decomposition and block trading (10 -> 1)
+assert.deepStrictEqual(L.decompose(3407), { th: 3, h: 4, t: 0, u: 7 });
+let bs = { th: 0, h: 0, t: 0, u: 9 };
+bs = L.stepBlocks(bs, 'u', 1);
+assert.deepStrictEqual([bs.th, bs.h, bs.t, bs.u, bs.value, bs.traded], [0, 0, 1, 0, 10, 'trade10']);
+bs = L.stepBlocks({ th: 0, h: 0, t: 9, u: 0 }, 't', 1);
+assert.deepStrictEqual([bs.th, bs.h, bs.t, bs.u, bs.value, bs.traded], [0, 1, 0, 0, 100, 'trade100']);
+bs = L.stepBlocks({ th: 0, h: 9, t: 0, u: 0 }, 'h', 1);
+assert.deepStrictEqual([bs.th, bs.h, bs.t, bs.u, bs.value, bs.traded], [1, 0, 0, 0, 1000, 'trade1000']);
+bs = L.stepBlocks({ th: 0, h: 0, t: 0, u: 0 }, 'u', -1);
+assert.strictEqual(bs.value, 0, 'cannot go below 0');
+
+// Place-value quiz questions
+for (const mode of ['type', 'choice']) {
+  const cfg = { ...L.defaultCfg(), ops: ['pv'], count: 60, mode };
+  const kinds = new Set();
+  for (let i = 0; i < 10; i++) for (const q of L.makeRound(cfg)) {
+    n++;
+    kinds.add(q.pvKind);
+    assert.strictEqual(q.op, 'pv');
+    assert(Number.isInteger(q.answer) && q.answer >= 0, 'pv answer int');
+    assert(L.TR.en[q.promptKey] && L.TR.es[q.promptKey], 'pv prompt key translated: ' + q.promptKey);
+    if (q.pvKind === 'blocks') assert.strictEqual(q.blocks.th * 1000 + q.blocks.h * 100 + q.blocks.t * 10 + q.blocks.u, q.answer);
+    if (q.pvKind === 'digit') assert.strictEqual(L.decompose(q.promptNum)[q.pvPlace], q.answer);
+    if (q.pvKind === 'equiv') assert.strictEqual(q.answer * q.b, q.a);
+    if (mode === 'choice') {
+      assert.strictEqual(new Set(q.choices).size, 4);
+      assert(q.choices.includes(q.answer));
+    }
+    const x = L.explain(q);
+    assert.strictEqual(x.key, 'xPlaceValue');
+  }
+  assert.strictEqual(kinds.size, 3, 'all 3 place-value question types generated');
+}
+assert.strictEqual(L.normalizeProfile({ id: 'h', name: 'A', config: { digits: 100 } }, 'en').config.digits, 100, 'digits=100 preserved');
+assert.strictEqual(L.normalizeProfile({ id: 'h', name: 'A', config: { digits: 99 } }, 'en').config.digits, 1, 'invalid digits reset');
+
 /* ---------- PWA ---------- */
 const manifest = JSON.parse(fs.readFileSync(__dirname + '/manifest.json', 'utf8'));
 assert(manifest.icons.length >= 2, 'manifest has icons');
